@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 export type ItemType = "video" | "reading" | "quiz" | "assignment";
-export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string }
+export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined }
 export interface Section { id: string; title: string; items: Item[] }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string }
 interface State { maps: StudyMap[]; studyDays: string[] }
@@ -64,7 +64,7 @@ export const actions = {
   deleteSection: (mid: string, sid: string) => set(onMap(mid, (m) => ({ ...m, sections: m.sections.filter((s) => s.id !== sid) }))),
   moveSection: (mid: string, sid: string, dir: -1 | 1) => set(onMap(mid, (m) => {
     const arr = [...m.sections]; const i = arr.findIndex((s) => s.id === sid); const j = i + dir;
-    if (j < 0 || j >= arr.length) return m; [arr[i], arr[j]] = [arr[j], arr[i]]; return { ...m, sections: arr };
+    if (j < 0 || j >= arr.length) return m; const t = arr[i]!; arr[i] = arr[j]!; arr[j] = t; return { ...m, sections: arr };
   })),
   addItem: (mid: string, sid: string, item: Omit<Item, "id" | "done">) => set(onSection(mid, sid, (s) => ({ ...s, items: [...s.items, { ...item, id: uid(), done: false }] }))),
   deleteItem: (mid: string, sid: string, iid: string) => set(onSection(mid, sid, (s) => ({ ...s, items: s.items.filter((i) => i.id !== iid) }))),
