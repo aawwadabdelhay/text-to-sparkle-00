@@ -2,10 +2,8 @@ import { useSyncExternalStore } from "react";
 
 export type ItemType = "video" | "reading" | "quiz" | "assignment";
 export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined }
-export interface Section { id: string; title: string; items: Item[]; x?: number; y?: number }
-export interface Link { from: string; to: string }
-export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[] }
-export const nodePos = (s: Section, i: number) => ({ x: s.x ?? 40 + i * 270, y: s.y ?? 60 + (i % 2) * 170 });
+export interface Section { id: string; title: string; items: Item[] }
+export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string }
 interface State { maps: StudyMap[]; studyDays: string[] }
 
 const KEY = "ljt-state-v1";
@@ -78,13 +76,6 @@ export const actions = {
     const d = today();
     return checked && !next.studyDays.includes(d) ? { ...next, studyDays: [...next.studyDays, d] } : next;
   }),
-  moveNode: (mid: string, sid: string, x: number, y: number) => set(onSection(mid, sid, (s) => ({ ...s, x, y }))),
-  toggleLink: (mid: string, from: string, to: string) => set(onMap(mid, (m) => {
-    if (from === to) return m;
-    const links = m.links ?? [];
-    const has = links.some((l) => (l.from === from && l.to === to) || (l.from === to && l.to === from));
-    return { ...m, links: has ? links.filter((l) => !((l.from === from && l.to === to) || (l.from === to && l.to === from))) : [...links, { from, to }] };
-  })),
 };
 
 export function stats(items: Item[]) {

@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as MapsIdRouteImport } from './routes/maps.$id'
-import { Route as MapsIdSidRouteImport } from './routes/maps_.$id.$sid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +28,35 @@ const MapsIdRoute = MapsIdRouteImport.update({
   path: '/maps/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MapsIdSidRoute = MapsIdSidRouteImport.update({
-  id: '/maps_/$id/$sid',
-  path: '/maps/$id/$sid',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
-  '/maps/$id/$sid': typeof MapsIdSidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
-  '/maps/$id/$sid': typeof MapsIdSidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
-  '/maps_/$id/$sid': typeof MapsIdSidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/stats' | '/maps/$id' | '/maps/$id/$sid'
+  fullPaths: '/' | '/stats' | '/maps/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/stats' | '/maps/$id' | '/maps/$id/$sid'
-  id: '__root__' | '/' | '/stats' | '/maps/$id' | '/maps_/$id/$sid'
+  to: '/' | '/stats' | '/maps/$id'
+  id: '__root__' | '/' | '/stats' | '/maps/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   StatsRoute: typeof StatsRoute
   MapsIdRoute: typeof MapsIdRoute
-  MapsIdSidRoute: typeof MapsIdSidRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,13 +82,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/maps_/$id/$sid': {
-      id: '/maps_/$id/$sid'
-      path: '/maps/$id/$sid'
-      fullPath: '/maps/$id/$sid'
-      preLoaderRoute: typeof MapsIdSidRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   StatsRoute: StatsRoute,
   MapsIdRoute: MapsIdRoute,
-  MapsIdSidRoute: MapsIdSidRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
