@@ -84,8 +84,17 @@ export const actions = {
   updateMap: (id: string, title: string, description: string) => set(onMap(id, (m) => ({ ...m, title, description }))),
   deleteMap: (id: string) => set((s) => ({ ...s, maps: s.maps.filter((m) => m.id !== id) })),
   addLearningPath: (title: string) => { const id = uid(); set((s) => ({ ...s, learningPaths: [...s.learningPaths, { id, title }] })); return id; },
-  deleteLearningPath: (id: string) => set((s) => ({ ...s, learningPaths: s.learningPaths.filter((p) => p.id !== id), maps: s.maps.map((m) => m.pathId === id ? { ...m, pathId: undefined } : m) })),
-  assignMapToPath: (mapId: string, pathId?: string) => set((s) => ({ ...s, maps: s.maps.map((m) => m.id === mapId ? { ...m, pathId } : m) })),
+  deleteLearningPath: (id: string) => set((s) => ({ ...s, learningPaths: s.learningPaths.filter((p) => p.id !== id), maps: s.maps.map((m) => {
+    if (m.pathId !== id) return m;
+    const { pathId: _removed, ...withoutPath } = m;
+    return withoutPath;
+  }) })),
+  assignMapToPath: (mapId: string, pathId?: string) => set((s) => ({ ...s, maps: s.maps.map((m) => {
+    if (m.id !== mapId) return m;
+    if (pathId) return { ...m, pathId };
+    const { pathId: _removed, ...withoutPath } = m;
+    return withoutPath;
+  }) })),
   groupMaps: (sourceId: string, targetId: string) => set((s) => {
     if (sourceId === targetId) return s;
     const target = s.maps.find((m) => m.id === targetId);
