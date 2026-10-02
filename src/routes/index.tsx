@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { maps, studyDays } = useStore();
+  const { maps, studyDays, learningPaths } = useStore();
   const [title, setTitle] = useState("");
   const [pathTitle, setPathTitle] = useState("");
   const [view, setView] = useState<"cards" | "tree">("cards");
@@ -73,7 +73,7 @@ function Index() {
           <Input value={pathTitle} onChange={(e) => setPathTitle(e.target.value)} placeholder="Learning path name" className="bg-card" />
           <Button><Plus />Path</Button>
         </form>
-        {useStore().learningPaths.map((path) => {
+        {learningPaths.map((path) => {
           const pathMaps = maps.filter((m) => m.pathId === path.id);
           return <section key={path.id} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedMap) actions.assignMapToPath(draggedMap, path.id); }} className="rounded-xl border bg-card p-4">
             <div className="mb-3 flex items-center gap-2"><FolderTree className="text-secondary" /><h2 className="flex-1 font-display text-xl">{path.title}</h2><span className="text-xs text-muted-foreground">{pathMaps.length} plans</span><Button size="icon" variant="ghost" onClick={() => actions.deleteLearningPath(path.id)} aria-label="Delete learning path"><Trash2 /></Button></div>
