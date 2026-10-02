@@ -66,6 +66,18 @@ const mapMaps = (fn: (m: StudyMap) => StudyMap) => (s: State) => ({ ...s, maps: 
 const onMap = (id: string, fn: (m: StudyMap) => StudyMap) => mapMaps((m) => (m.id === id ? fn(m) : m));
 const onSection = (mid: string, sid: string, fn: (s: Section) => Section) =>
   onMap(mid, (m) => ({ ...m, sections: m.sections.map((s) => (s.id === sid ? fn(s) : s)) }));
+const onItem = (mid: string, sid: string, iid: string, fn: (i: Item) => Item) =>
+  onSection(mid, sid, (s) => ({ ...s, items: s.items.map((i) => i.id === iid ? fn(i) : i) }));
+function reorder<T extends { id: string }>(items: T[], sourceId: string, targetId: string) {
+  const from = items.findIndex((item) => item.id === sourceId);
+  const to = items.findIndex((item) => item.id === targetId);
+  if (from < 0 || to < 0 || from === to) return items;
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  if (!moved) return items;
+  next.splice(to, 0, moved);
+  return next;
+}
 
 export const actions = {
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },

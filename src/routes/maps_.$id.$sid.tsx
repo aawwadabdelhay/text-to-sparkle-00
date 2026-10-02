@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { BookOpen, ClipboardCheck, HelpCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { BookOpen, ClipboardCheck, GripVertical, HelpCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { actions, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
 
 export const Route = createFileRoute("/maps_/$id/$sid")({
@@ -26,6 +28,7 @@ function SectionPage() {
   const { id, sid } = Route.useParams();
   const { maps } = useStore();
   const [title, setTitle] = useState(""); const [min, setMin] = useState("15"); const [type, setType] = useState<ItemType>("video");
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const m = maps.find((x) => x.id === id);
   const sec = m?.sections.find((x) => x.id === sid);
   if (!m || !sec) return <Shell><p className="text-muted-foreground">Module not found. <Link to="/" className="text-primary underline">Back</Link></p></Shell>;
@@ -37,7 +40,7 @@ function SectionPage() {
       <Link to="/maps/$id" params={{ id }} className="text-sm text-muted-foreground hover:text-foreground">← {m.title}</Link>
       <div className="mt-3 flex items-center gap-3">
         <h1 className="flex-1 font-display text-4xl">{sec.title}</h1>
-        <button aria-label="Rename" className="text-muted-foreground hover:text-foreground" onClick={() => { const t = prompt("Module title", sec.title); if (t?.trim()) actions.renameSection(id, sid, t.trim()); }}><Pencil size={18} /></button>
+        <Button size="icon" variant="ghost" aria-label="Rename" onClick={() => { const t = prompt("Module title", sec.title); if (t?.trim()) actions.renameSection(id, sid, t.trim()); }}><Pencil /></Button>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -61,12 +64,13 @@ function SectionPage() {
         {sec.items.map((it) => {
           const Icon = icons[it.type];
           return (
-            <li key={it.id} className="group flex items-center gap-3 px-4 py-3">
-              <input type="checkbox" checked={it.done} onChange={() => actions.toggleItem(id, sid, it.id)} className="h-5 w-5 cursor-pointer accent-[var(--primary)]" />
+            <li key={it.id} draggable onDragStart={() => setDraggedItem(it.id)} onDragEnd={() => setDraggedItem(null)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedItem) actions.reorderItem(id, sid, draggedItem, it.id); }} className="group flex items-center gap-3 px-4 py-3">
+              <GripVertical size={16} className="cursor-grab text-muted-foreground" aria-label="Drag item" />
+              <Checkbox checked={it.done} onCheckedChange={() => actions.toggleItem(id, sid, it.id)} aria-label={`Mark ${it.title} complete`} />
               <Icon size={17} className="text-primary" />
-              <span className={`flex-1 text-sm transition ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title}</span>
+              <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid, iid: it.id }} className={`flex-1 text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title}</Link>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{labels[it.type]} · {fmt(it.minutes)}</span>
-              <button onClick={() => actions.deleteItem(id, sid, it.id)} className="text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100" aria-label="Delete item"><Trash2 size={14} /></button>
+              <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(id, sid, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
             </li>
           );
         })}
@@ -79,7 +83,7 @@ function SectionPage() {
           {(Object.keys(labels) as ItemType[]).map((t) => <option key={t} value={t}>{labels[t]}</option>)}
         </select>
         <input type="number" min={1} value={min} onChange={(e) => setMin(e.target.value)} className={`w-20 ${input}`} aria-label="Minutes" />
-        <button className="rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Add</button>
+        <Button>Add</Button>
       </form>
     </Shell>
   );
