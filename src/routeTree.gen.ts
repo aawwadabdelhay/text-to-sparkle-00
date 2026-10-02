@@ -13,7 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as MapsIdRouteImport } from './routes/maps.$id'
 import { Route as MapsIdSidRouteImport } from './routes/maps_.$id.$sid'
-import { Route as MapsIdSidItemsIidRouteImport } from './routes/maps.$id.$sid.items.$iid'
+import { Route as MapsIdSidItemsIidRouteImport } from './routes/maps_.$id.$sid.items.$iid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,32 +36,32 @@ const MapsIdSidRoute = MapsIdSidRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapsIdSidItemsIidRoute = MapsIdSidItemsIidRouteImport.update({
-  id: '/$sid/items/$iid',
-  path: '/$sid/items/$iid',
-  getParentRoute: () => MapsIdRoute,
+  id: '/items/$iid',
+  path: '/items/$iid',
+  getParentRoute: () => MapsIdSidRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
-  '/maps/$id': typeof MapsIdRouteWithChildren
-  '/maps/$id/$sid': typeof MapsIdSidRoute
+  '/maps/$id': typeof MapsIdRoute
+  '/maps/$id/$sid': typeof MapsIdSidRouteWithChildren
   '/maps/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
-  '/maps/$id': typeof MapsIdRouteWithChildren
-  '/maps/$id/$sid': typeof MapsIdSidRoute
+  '/maps/$id': typeof MapsIdRoute
+  '/maps/$id/$sid': typeof MapsIdSidRouteWithChildren
   '/maps/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/stats': typeof StatsRoute
-  '/maps/$id': typeof MapsIdRouteWithChildren
-  '/maps_/$id/$sid': typeof MapsIdSidRoute
-  '/maps/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
+  '/maps/$id': typeof MapsIdRoute
+  '/maps_/$id/$sid': typeof MapsIdSidRouteWithChildren
+  '/maps_/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -84,14 +84,14 @@ export interface FileRouteTypes {
     | '/stats'
     | '/maps/$id'
     | '/maps_/$id/$sid'
-    | '/maps/$id/$sid/items/$iid'
+    | '/maps_/$id/$sid/items/$iid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   StatsRoute: typeof StatsRoute
-  MapsIdRoute: typeof MapsIdRouteWithChildren
-  MapsIdSidRoute: typeof MapsIdSidRoute
+  MapsIdRoute: typeof MapsIdRoute
+  MapsIdSidRoute: typeof MapsIdSidRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -124,32 +124,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapsIdSidRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/maps/$id/$sid/items/$iid': {
-      id: '/maps/$id/$sid/items/$iid'
-      path: '/$sid/items/$iid'
+    '/maps_/$id/$sid/items/$iid': {
+      id: '/maps_/$id/$sid/items/$iid'
+      path: '/items/$iid'
       fullPath: '/maps/$id/$sid/items/$iid'
       preLoaderRoute: typeof MapsIdSidItemsIidRouteImport
-      parentRoute: typeof MapsIdRoute
+      parentRoute: typeof MapsIdSidRoute
     }
   }
 }
 
-interface MapsIdRouteChildren {
+interface MapsIdSidRouteChildren {
   MapsIdSidItemsIidRoute: typeof MapsIdSidItemsIidRoute
 }
 
-const MapsIdRouteChildren: MapsIdRouteChildren = {
+const MapsIdSidRouteChildren: MapsIdSidRouteChildren = {
   MapsIdSidItemsIidRoute: MapsIdSidItemsIidRoute,
 }
 
-const MapsIdRouteWithChildren =
-  MapsIdRoute._addFileChildren(MapsIdRouteChildren)
+const MapsIdSidRouteWithChildren = MapsIdSidRoute._addFileChildren(
+  MapsIdSidRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   StatsRoute: StatsRoute,
-  MapsIdRoute: MapsIdRouteWithChildren,
-  MapsIdSidRoute: MapsIdSidRoute,
+  MapsIdRoute: MapsIdRoute,
+  MapsIdSidRoute: MapsIdSidRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

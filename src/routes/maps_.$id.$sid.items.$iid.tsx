@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/maps/$id/$sid/items/$iid")({
+export const Route = createFileRoute("/maps_/$id/$sid/items/$iid")({
   head: () => ({ meta: [
     { title: "Learning item — Learning Journey Tracker" },
     { name: "description", content: "Manage learning materials and quiz questions for a study item." },
