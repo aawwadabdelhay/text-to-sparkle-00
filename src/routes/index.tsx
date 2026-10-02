@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Shell, Progress } from "@/components/Shell";
+import { Shell, Progress, Ring } from "@/components/Shell";
 import { actions, fmt, mapItems, stats, streak, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
@@ -34,7 +34,7 @@ function Index() {
       </section>
 
       <form className="mb-6 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (title.trim()) { actions.addMap(title.trim()); setTitle(""); } }}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="New study map, e.g. Machine Learning Specialization"
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="New diploma or study plan, e.g. Diesel Engine Diploma"
           className="flex-1 rounded-xl border bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
         <button className="flex items-center gap-1 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground"><Plus size={16} />Add</button>
       </form>
@@ -43,15 +43,16 @@ function Index() {
         {maps.map((m) => {
           const s = stats(mapItems(m));
           return (
-            <div key={m.id} className="group relative rounded-2xl border bg-card p-6 transition hover:border-primary">
+            <div key={m.id} className="group relative rounded-2xl border bg-card p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-primary">
               <Link to="/maps/$id" params={{ id: m.id }} className="absolute inset-0" aria-label={m.title} />
-              <div className="flex items-start justify-between">
-                <h2 className="font-display text-2xl leading-snug">{m.title}</h2>
+              <div className="flex items-start gap-4">
+                <Ring value={s.pct} />
+                <h2 className="flex-1 font-display text-2xl leading-snug">{m.title}</h2>
                 <button className="relative z-[1] text-muted-foreground opacity-0 transition hover:text-destructive group-hover:opacity-100"
                   onClick={() => confirm(`Delete "${m.title}"?`) && actions.deleteMap(m.id)} aria-label="Delete map"><Trash2 size={16} /></button>
               </div>
-              {m.description && <p className="mt-1 text-sm text-muted-foreground">{m.description}</p>}
-              <div className="mt-6 flex items-baseline justify-between text-sm"><span className="font-semibold">{s.pct}%</span><span className="text-muted-foreground">{m.sections.length} sections · {fmt(s.leftMin)} left</span></div>
+              {m.description && <p className="mt-2 text-sm text-muted-foreground">{m.description}</p>}
+              <div className="mt-5 flex items-baseline justify-between text-sm"><span className="font-semibold">{mapItems(m).filter((i) => i.done).length}/{mapItems(m).length} items</span><span className="text-muted-foreground">{m.sections.length} modules · {fmt(s.leftMin)} left</span></div>
               <div className="mt-2"><Progress value={s.pct} /></div>
             </div>
           );
