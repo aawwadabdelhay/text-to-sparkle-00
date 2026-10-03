@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { BookOpen, ClipboardCheck, GripVertical, HelpCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpen, ClipboardCheck, HelpCircle, StickyNote, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,15 +20,14 @@ export const Route = createFileRoute("/maps_/$id/$sid")({
   component: SectionPage,
 });
 
-const icons: Record<ItemType, typeof PlayCircle> = { video: PlayCircle, reading: BookOpen, quiz: HelpCircle, assignment: ClipboardCheck };
-const labels: Record<ItemType, string> = { video: "Video", reading: "Reading", quiz: "Quiz", assignment: "Assignment" };
+const icons: Record<ItemType, typeof PlayCircle> = { video: PlayCircle, reading: BookOpen, quiz: HelpCircle, assignment: ClipboardCheck, note: StickyNote };
+const labels: Record<ItemType, string> = { video: "Video", reading: "Reading", quiz: "Quiz", assignment: "Assignment", note: "Note" };
 const input = "rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
 
 function SectionPage() {
   const { id, sid } = Route.useParams();
   const { maps } = useStore();
   const [title, setTitle] = useState(""); const [min, setMin] = useState("15"); const [type, setType] = useState<ItemType>("video");
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const m = maps.find((x) => x.id === id);
   const sec = m?.sections.find((x) => x.id === sid);
   if (!m || !sec) return <Shell><p className="text-muted-foreground">Module not found. <Link to="/" className="text-primary underline">Back</Link></p></Shell>;
@@ -64,17 +63,18 @@ function SectionPage() {
         {sec.items.map((it) => {
           const Icon = icons[it.type];
           return (
-            <li key={it.id} draggable onDragStart={() => setDraggedItem(it.id)} onDragEnd={() => setDraggedItem(null)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedItem) actions.reorderItem(id, sid, draggedItem, it.id); }} className="group flex items-center gap-3 px-4 py-3">
-              <GripVertical size={16} className="cursor-grab text-muted-foreground" aria-label="Drag item" />
+            <li key={it.id} className="group flex items-center gap-3 px-4 py-3">
               <Checkbox checked={it.done} onCheckedChange={() => actions.toggleItem(id, sid, it.id)} aria-label={`Mark ${it.title} complete`} />
               <Icon size={17} className="text-primary" />
-              <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid, iid: it.id }} className={`flex-1 text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title}</Link>
+              <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid, iid: it.id }} className={`flex-1 text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title} →</Link>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{labels[it.type]} · {fmt(it.minutes)}</span>
+              <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, -1)} aria-label="Move up"><ArrowUp /></Button>
+              <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, 1)} aria-label="Move down"><ArrowDown /></Button>
               <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(id, sid, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
             </li>
           );
         })}
-        {sec.items.length === 0 && <li className="px-4 py-6 text-sm text-muted-foreground">No items yet — add a video, reading or quiz below.</li>}
+        {sec.items.length === 0 && <li className="px-4 py-6 text-sm text-muted-foreground">No items yet — add a video, quiz, assignment or note below.</li>}
       </ul>
 
       <form className="mt-4 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (!title.trim()) return; actions.addItem(id, sid, { title: title.trim(), type, minutes: Math.max(1, Number(min) || 0) }); setTitle(""); }}>

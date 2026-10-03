@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-export type ItemType = "video" | "reading" | "quiz" | "assignment";
+export type ItemType = "video" | "reading" | "quiz" | "assignment" | "note";
 export interface Material { id: string; title: string; url: string }
 export interface QuizQuestion { id: string; question: string; answer: string }
-export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined; materials?: Material[]; quizzes?: QuizQuestion[] }
+export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined; materials?: Material[]; quizzes?: QuizQuestion[]; notes?: string }
 export interface Section { id: string; title: string; items: Item[]; x?: number; y?: number }
 export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
@@ -79,7 +79,19 @@ function reorder<T extends { id: string }>(items: T[], sourceId: string, targetI
   return next;
 }
 
+function shift<T extends { id: string }>(arr: T[], id: string, dir: -1 | 1, same: (a: T, b: T) => boolean = () => true) {
+  const i = arr.findIndex((x) => x.id === id); const cur = arr[i]; if (!cur) return arr;
+  let j = i + dir; while (j >= 0 && j < arr.length && !same(cur, arr[j] as T)) j += dir;
+  if (j < 0 || j >= arr.length) return arr;
+  const next = [...arr]; next[i] = arr[j] as T; next[j] = cur; return next;
+}
+
 export const actions = {
+  moveMap: (id: string, dir: -1 | 1) => set((s) => ({ ...s, maps: shift(s.maps, id, dir, (a, b) => a.pathId === b.pathId) })),
+  movePath: (id: string, dir: -1 | 1) => set((s) => ({ ...s, learningPaths: shift(s.learningPaths, id, dir) })),
+  renameLearningPath: (id: string, title: string) => set((s) => ({ ...s, learningPaths: s.learningPaths.map((p) => p.id === id ? { ...p, title } : p) })),
+  moveItem: (mid: string, sid: string, iid: string, dir: -1 | 1) => set(onSection(mid, sid, (s) => ({ ...s, items: shift(s.items, iid, dir) }))),
+  setNotes: (mid: string, sid: string, iid: string, notes: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, notes }))),
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },
   updateMap: (id: string, title: string, description: string) => set(onMap(id, (m) => ({ ...m, title, description }))),
   deleteMap: (id: string) => set((s) => ({ ...s, maps: s.maps.filter((m) => m.id !== id) })),

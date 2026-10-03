@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CheckCircle2, ExternalLink, FileText, HelpCircle, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileText, HelpCircle, Plus, StickyNote, Trash2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/maps_/$id/$sid/items/$iid")({
+export const Route = createFileRoute("/maps_/$id/$sid_/items/$iid")({
   head: () => ({ meta: [
     { title: "Learning item — Learning Journey Tracker" },
     { name: "description", content: "Manage learning materials and quiz questions for a study item." },
@@ -43,6 +43,10 @@ function ItemPage() {
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Module progress</span><span>{moduleStats.pct}%</span></div><div className="mt-3"><Progress value={moduleStats.pct} /></div></div>
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Diploma progress</span><span>{diplomaStats.pct}%</span></div><div className="mt-3"><Progress value={diplomaStats.pct} /></div></div>
     </div>
+
+    <section className="mt-8"><div className="mb-3 flex items-center gap-2"><StickyNote className="text-accent" /><h2 className="font-display text-2xl">My notes</h2></div>
+      <textarea value={item.notes ?? ""} onChange={(e) => actions.setNotes(id, sid, iid, e.target.value)} placeholder="Write notes for this item — saved automatically" rows={6} className="w-full rounded-xl border bg-card p-4 text-sm outline-none focus:ring-2 focus:ring-ring" />
+    </section>
 
     <div className="mt-8 grid gap-8 lg:grid-cols-2">
       <section><div className="mb-3 flex items-center gap-2"><FileText className="text-primary" /><h2 className="font-display text-2xl">Materials</h2></div>
