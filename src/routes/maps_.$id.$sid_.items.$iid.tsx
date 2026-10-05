@@ -31,7 +31,7 @@ function ItemPage() {
 
   if (!map || !section || !item) return <Shell><p className="text-muted-foreground">Learning item not found. <Link to="/" className="text-primary underline">Back home</Link></p></Shell>;
   const moduleStats = stats(section.items);
-  const diplomaStats = stats(mapItems(map));
+  const courseStats = stats(mapItems(map));
 
   return <Shell>
     <Link to="/maps/$id/$sid" params={{ id, sid }} className="text-sm text-muted-foreground hover:text-foreground">← {section.title}</Link>
@@ -41,7 +41,7 @@ function ItemPage() {
     </div>
     <div className="mt-6 grid gap-4 sm:grid-cols-2">
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Module progress</span><span>{moduleStats.pct}%</span></div><div className="mt-3"><Progress value={moduleStats.pct} /></div></div>
-      <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Diploma progress</span><span>{diplomaStats.pct}%</span></div><div className="mt-3"><Progress value={diplomaStats.pct} /></div></div>
+      <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Course progress</span><span>{courseStats.pct}%</span></div><div className="mt-3"><Progress value={courseStats.pct} /></div></div>
     </div>
 
     <section className="mt-8"><div className="mb-3 flex items-center gap-2"><StickyNote className="text-accent" /><h2 className="font-display text-2xl">My notes</h2></div>

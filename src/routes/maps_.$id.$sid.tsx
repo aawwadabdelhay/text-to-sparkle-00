@@ -12,7 +12,7 @@ export const Route = createFileRoute("/maps_/$id/$sid")({
       { title: "Module breakdown — Learning Journey Tracker" },
       { name: "description", content: "Videos, readings and quizzes in this module with live completion tracking." },
       { property: "og:title", content: "Module breakdown — Learning Journey Tracker" },
-      { property: "og:description", content: "Tick off learning items and watch module, diploma and overall progress update." },
+      { property: "og:description", content: "Tick off learning items and watch module, course and overall progress update." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -43,7 +43,7 @@ function SectionPage() {
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        {[["This module", s.pct, `${fmt(s.leftMin)} left`], ["Diploma", d.pct, `${d.done}/${d.total} items`], ["Overall", all.pct, `${fmt(all.leftMin)} left`]].map(([k, v, sub]) => (
+        {[["This module", s.pct, `${fmt(s.leftMin)} left`], ["Course", d.pct, `${d.done}/${d.total} items`], ["Overall", all.pct, `${fmt(all.leftMin)} left`]].map(([k, v, sub]) => (
           <div key={k as string} className="flex items-center gap-4 rounded-2xl border bg-card p-4">
             <Ring value={v as number} />
             <div><p className="text-xs uppercase tracking-widest text-muted-foreground">{k}</p><p className="text-sm">{sub}</p></div>

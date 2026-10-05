@@ -19,7 +19,7 @@ const initialState: State = {
   studyDays: [],
   learningPaths: [{ id: "path-web", title: "Web development" }],
   maps: [{
-    id: "map-full-stack", title: "Full-Stack Web Dev Diploma", description: "From HTML basics to deployed apps.", createdAt: "2026-01-01T00:00:00.000Z", pathId: "path-web",
+    id: "map-full-stack", title: "Full-Stack Web Dev Course", description: "From HTML basics to deployed apps.", createdAt: "2026-01-01T00:00:00.000Z", pathId: "path-web",
     sections: [
       { id: "section-foundations", title: "Week 1 — Foundations", items: [
         { id: "item-web", title: "How the web works", type: "video", minutes: 25, done: false },
@@ -35,7 +35,9 @@ const initialState: State = {
 };
 
 const normalize = (value: Partial<State>): State => ({
-  maps: Array.isArray(value.maps) ? value.maps : initialState.maps,
+  maps: Array.isArray(value.maps)
+    ? value.maps.map((m) => (m.title === "Full-Stack Web Dev Diploma" ? { ...m, title: "Full-Stack Web Dev Course" } : m))
+    : initialState.maps,
   studyDays: Array.isArray(value.studyDays) ? value.studyDays : [],
   learningPaths: Array.isArray(value.learningPaths) ? value.learningPaths : [],
 });
