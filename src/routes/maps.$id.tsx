@@ -5,7 +5,7 @@ import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { actions, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
+import { actions, fmt, mapItems, stats, useStore, type ItemType, type Section, type StudyMap } from "@/lib/store";
 
 export const Route = createFileRoute("/maps/$id")({
   head: () => ({ meta: [
@@ -21,14 +21,13 @@ export const Route = createFileRoute("/maps/$id")({
 const icons: Record<ItemType, typeof PlayCircle> = { video: PlayCircle, reading: BookOpen, quiz: HelpCircle, assignment: ClipboardCheck, note: StickyNote };
 
 function SectionCard({ map, section, index, expanded, onToggle }: {
-  map: { id: string; sections: { id: string; length: number }[] } & Record<string, unknown>;
-  section: { id: string; title: string; items: { id: string; title: string; type: ItemType; minutes: number; done: boolean }[] };
+  map: StudyMap;
+  section: Section;
   index: number;
   expanded: boolean;
   onToggle: () => void;
 }) {
   const st = stats(section.items);
-  const maps = map as { id: string; sections: { id: string; length: number }[] } & Record<string, unknown>;
   return (
     <div className="rounded-xl border bg-card p-4 transition hover:border-primary">
       <div className="flex items-center gap-3">
@@ -37,26 +36,26 @@ function SectionCard({ map, section, index, expanded, onToggle }: {
           {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </button>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">{index + 1}</span>
-        <Link to="/maps/$id/$sid" params={{ id: maps.id, sid: section.id }} className="flex-1 font-display text-xl hover:text-primary">{section.title}</Link>
+        <Link to="/maps/$id/$sid" params={{ id: map.id, sid: section.id }} className="flex-1 font-display text-xl hover:text-primary">{section.title}</Link>
         <span className="hidden rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground sm:inline">{st.done}/{st.total} items</span>
-        <Button size="icon" variant="ghost" onClick={() => actions.moveSection(maps.id as string, section.id, -1)} disabled={index === 0} aria-label="Move up"><ArrowUp /></Button>
-        <Button size="icon" variant="ghost" onClick={() => actions.moveSection(maps.id as string, section.id, 1)} disabled={index === maps.sections.length - 1} aria-label="Move down"><ArrowDown /></Button>
-        <Button size="icon" variant="ghost" onClick={() => confirm("Delete section?") && actions.deleteSection(maps.id as string, section.id)} aria-label="Delete section"><Trash2 /></Button>
+        <Button size="icon" variant="ghost" onClick={() => actions.moveSection(map.id, section.id, -1)} disabled={index === 0} aria-label="Move up"><ArrowUp /></Button>
+        <Button size="icon" variant="ghost" onClick={() => actions.moveSection(map.id, section.id, 1)} disabled={index === map.sections.length - 1} aria-label="Move down"><ArrowDown /></Button>
+        <Button size="icon" variant="ghost" onClick={() => confirm("Delete section?") && actions.deleteSection(map.id, section.id)} aria-label="Delete section"><Trash2 /></Button>
       </div>
       <div className="mt-3 flex items-center gap-3"><Progress value={st.pct} /><span className="w-40 shrink-0 text-right text-xs text-muted-foreground">{st.done}/{st.total} · {st.pct}% · {fmt(st.leftMin)} left</span></div>
 
       {expanded && (
-        <ul className="mt-3 ml-3 space-y-1 border-l border-secondary/30 pl-4">
+        <ul className="ml-3 mt-3 space-y-1 border-l border-secondary/30 pl-4">
           {section.items.map((it) => {
             const Icon = icons[it.type];
             return (
               <li key={it.id} className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 transition hover:bg-primary/5">
-                <Checkbox checked={it.done} onCheckedChange={() => actions.toggleItem(maps.id as string, section.id, it.id)} aria-label={`Mark ${it.title} complete`} />
+                <Checkbox checked={it.done} onCheckedChange={() => actions.toggleItem(map.id, section.id, it.id)} aria-label={`Mark ${it.title} complete`} />
                 <Icon size={16} className="shrink-0 text-primary" />
-                <Link to="/maps/$id/$sid/items/$iid" params={{ id: maps.id as string, sid: section.id, iid: it.id }}
+                <Link to="/maps/$id/$sid/items/$iid" params={{ id: map.id, sid: section.id, iid: it.id }}
                   className={`flex-1 truncate text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title}</Link>
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{fmt(it.minutes)}</span>
-                <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(maps.id as string, section.id, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
+                <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(map.id, section.id, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
               </li>
             );
           })}
