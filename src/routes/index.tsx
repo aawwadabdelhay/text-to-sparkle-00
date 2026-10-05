@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import type React from "react";
 import { ArrowDown, ArrowUp, FolderTree, GraduationCap, Pencil, Plus, Trash2 } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { actions, fmt, mapItems, stats, streak, useStore, type LearningPath, type StudyMap } from "@/lib/store";
+import { actions, fmt, mapItems, stats, streak, useStore, type StudyMap } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,15 +29,64 @@ function Tag({ kind }: { kind: "path" | "course" }) {
     : <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary"><GraduationCap size={12} />Course</span>;
 }
 
-function CourseControls({ m, paths }: { m: StudyMap; paths: LearningPath[] }) {
+let dragId: string | null = null;
+function useDrop(pathId: string | undefined, beforeId?: string) {
+  const [over, setOver] = useState(false);
+  return { over, props: {
+    onDragOver: (e: React.DragEvent) => { if (!dragId) return; e.preventDefault(); e.stopPropagation(); setOver(true); },
+    onDragLeave: () => setOver(false),
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setOver(false); if (dragId) actions.placeMap(dragId, pathId, beforeId); dragId = null; },
+  } };
+}
+const dragProps = (id: string) => ({
+  draggable: true,
+  onDragStart: (e: React.DragEvent) => { dragId = id; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id); },
+  onDragEnd: () => { dragId = null; },
+});
+
+function CourseControls({ m }: { m: StudyMap }) {
   return <div className="relative z-[1] flex items-center gap-1">
-    <select className={sel} value={m.pathId ?? ""} onChange={(e) => actions.assignMapToPath(m.id, e.target.value || undefined)} aria-label="Move course to learning path">
-      <option value="">Standalone</option>
-      {paths.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-    </select>
-    <Button size="icon" variant="ghost" onClick={() => actions.moveMap(m.id, -1)} aria-label="Move up"><ArrowUp /></Button>
-    <Button size="icon" variant="ghost" onClick={() => actions.moveMap(m.id, 1)} aria-label="Move down"><ArrowDown /></Button>
     <Button size="icon" variant="ghost" onClick={() => confirm(`Delete "${m.title}"?`) && actions.deleteMap(m.id)} aria-label="Delete course"><Trash2 /></Button>
+  </div>;
+}
+
+function PathCourse({ m, pathId }: { m: StudyMap; pathId: string }) {
+  const d = useDrop(pathId, m.id); const cs = stats(mapItems(m));
+  return <div {...dragProps(m.id)} {...d.props} className={`relative flex cursor-grab flex-wrap items-center gap-3 rounded-lg border bg-background/40 p-3 hover:border-primary active:cursor-grabbing ${d.over ? "border-t-4 border-t-primary" : ""}`}>
+    <Link to="/maps/$id" params={{ id: m.id }} draggable={false} className="absolute inset-0" aria-label={m.title} />
+    <Tag kind="course" />
+    <span className="min-w-32 flex-1 font-medium">{m.title}</span>
+    <span className="text-sm text-muted-foreground">{cs.pct}%</span>
+    <CourseControls m={m} />
+  </div>;
+}
+
+function StandaloneCard({ m }: { m: StudyMap }) {
+  const d = useDrop(undefined, m.id); const s = stats(mapItems(m));
+  return <div {...dragProps(m.id)} {...d.props} className={`relative cursor-grab rounded-xl border bg-card p-6 transition hover:-translate-y-0.5 hover:border-primary active:cursor-grabbing ${d.over ? "ring-2 ring-primary" : ""}`}>
+    <Link to="/maps/$id" params={{ id: m.id }} draggable={false} className="absolute inset-0" aria-label={m.title} />
+    <div className="flex items-start gap-4"><Ring value={s.pct} /><div className="flex-1"><Tag kind="course" /><h2 className="mt-2 font-display text-2xl leading-snug">{m.title}</h2></div></div>
+    {m.description && <p className="mt-2 text-sm text-muted-foreground">{m.description}</p>}
+    <div className="mt-5 flex items-baseline justify-between text-sm"><span className="font-semibold">{s.done}/{s.total} items</span><span className="text-muted-foreground">{m.sections.length} sections · {fmt(s.leftMin)} left</span></div>
+    <div className="mt-2"><Progress value={s.pct} /></div>
+    <div className="mt-4 flex justify-end"><CourseControls m={m} /></div>
+  </div>;
+}
+
+function PathCourses({ pathId, courses }: { pathId: string; courses: StudyMap[] }) {
+  const d = useDrop(pathId);
+  return <div {...d.props} className={`mt-4 space-y-2 rounded-lg border-l-2 border-secondary/40 pl-4 pb-2 ${d.over ? "bg-secondary/10" : ""}`}>
+    {courses.map((m) => <PathCourse key={m.id} m={m} pathId={pathId} />)}
+    <p className="py-2 text-xs text-muted-foreground">{courses.length === 0 ? "Drag a course here to add it to this path." : "Drop here to add at the end."}</p>
+  </div>;
+}
+
+function StandaloneZone({ list }: { list: StudyMap[] }) {
+  const d = useDrop(undefined);
+  return <div {...d.props} className={`rounded-xl p-1 ${d.over ? "bg-primary/10 ring-2 ring-dashed ring-primary" : ""}`}>
+    <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">Standalone courses — drop here to remove from a path</p>
+    <div className="grid gap-4 sm:grid-cols-2">{list.map((m) => <StandaloneCard key={m.id} m={m} />)}</div>
+    {list.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No standalone courses.</p>}
   </div>;
 }
 
@@ -82,38 +132,11 @@ function Index() {
               </div>
             </div>
             <div className="mt-3"><Progress value={s.pct} /></div>
-            <div className="mt-4 space-y-2 border-l-2 border-secondary/40 pl-4">
-              {courses.map((m) => { const cs = stats(mapItems(m)); return (
-                <div key={m.id} className="relative flex flex-wrap items-center gap-3 rounded-lg border bg-background/40 p-3 hover:border-primary">
-                  <Link to="/maps/$id" params={{ id: m.id }} className="absolute inset-0" aria-label={m.title} />
-                  <Tag kind="course" />
-                  <span className="min-w-32 flex-1 font-medium">{m.title}</span>
-                  <span className="text-sm text-muted-foreground">{cs.pct}%</span>
-                  <CourseControls m={m} paths={learningPaths} />
-                </div>); })}
-              {courses.length === 0 && <p className="py-2 text-sm text-muted-foreground">No courses yet — move a course here using its “Standalone” selector.</p>}
-            </div>
+            <PathCourses pathId={path.id} courses={courses} />
           </section>;
         })}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {standalone.map((m) => {
-            const s = stats(mapItems(m));
-            return (
-              <div key={m.id} className="relative rounded-xl border bg-card p-6 transition hover:-translate-y-0.5 hover:border-primary">
-                <Link to="/maps/$id" params={{ id: m.id }} className="absolute inset-0" aria-label={m.title} />
-                <div className="flex items-start gap-4">
-                  <Ring value={s.pct} />
-                  <div className="flex-1"><Tag kind="course" /><h2 className="mt-2 font-display text-2xl leading-snug">{m.title}</h2></div>
-                </div>
-                {m.description && <p className="mt-2 text-sm text-muted-foreground">{m.description}</p>}
-                <div className="mt-5 flex items-baseline justify-between text-sm"><span className="font-semibold">{s.done}/{s.total} items</span><span className="text-muted-foreground">{m.sections.length} sections · {fmt(s.leftMin)} left</span></div>
-                <div className="mt-2"><Progress value={s.pct} /></div>
-                <div className="mt-4 flex justify-end"><CourseControls m={m} paths={learningPaths} /></div>
-              </div>
-            );
-          })}
-        </div>
+        <StandaloneZone list={standalone} />
         {maps.length === 0 && learningPaths.length === 0 && <p className="text-muted-foreground">Nothing yet — add a course or learning path above.</p>}
       </div>
     </Shell>
