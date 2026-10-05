@@ -88,6 +88,16 @@ function shift<T extends { id: string }>(arr: T[], id: string, dir: -1 | 1, same
 
 export const actions = {
   moveMap: (id: string, dir: -1 | 1) => set((s) => ({ ...s, maps: shift(s.maps, id, dir, (a, b) => a.pathId === b.pathId) })),
+  placeMap: (id: string, pathId?: string, beforeId?: string) => set((s) => {
+    if (id === beforeId) return s;
+    const cur = s.maps.find((m) => m.id === id); if (!cur) return s;
+    const { pathId: _p, ...rest } = cur;
+    const moved: StudyMap = pathId ? { ...rest, pathId } : rest;
+    const others = s.maps.filter((m) => m.id !== id);
+    const at = beforeId ? others.findIndex((m) => m.id === beforeId) : -1;
+    if (at < 0) others.push(moved); else others.splice(at, 0, moved);
+    return { ...s, maps: others };
+  }),
   movePath: (id: string, dir: -1 | 1) => set((s) => ({ ...s, learningPaths: shift(s.learningPaths, id, dir) })),
   renameLearningPath: (id: string, title: string) => set((s) => ({ ...s, learningPaths: s.learningPaths.map((p) => p.id === id ? { ...p, title } : p) })),
   moveItem: (mid: string, sid: string, iid: string, dir: -1 | 1) => set(onSection(mid, sid, (s) => ({ ...s, items: shift(s.items, iid, dir) }))),
