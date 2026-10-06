@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as MapsIdRouteImport } from './routes/maps.$id'
 import { Route as MapsIdSidRouteImport } from './routes/maps_.$id.$sid'
+import { Route as MapsIdPlanRouteImport } from './routes/maps_.$id.plan'
 import { Route as MapsIdSidItemsIidRouteImport } from './routes/maps_.$id.$sid_.items.$iid'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const MapsIdSidRoute = MapsIdSidRouteImport.update({
   path: '/maps/$id/$sid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapsIdPlanRoute = MapsIdPlanRouteImport.update({
+  id: '/maps_/$id/plan',
+  path: '/maps/$id/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapsIdSidItemsIidRoute = MapsIdSidItemsIidRouteImport.update({
   id: '/maps_/$id/$sid_/items/$iid',
   path: '/maps/$id/$sid/items/$iid',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
   '/maps/$id/$sid': typeof MapsIdSidRoute
+  '/maps/$id/plan': typeof MapsIdPlanRoute
   '/maps/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
   '/maps/$id/$sid': typeof MapsIdSidRoute
+  '/maps/$id/plan': typeof MapsIdPlanRoute
   '/maps/$id/$sid/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRoutesById {
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/maps/$id': typeof MapsIdRoute
   '/maps_/$id/$sid': typeof MapsIdSidRoute
+  '/maps_/$id/plan': typeof MapsIdPlanRoute
   '/maps_/$id/$sid_/items/$iid': typeof MapsIdSidItemsIidRoute
 }
 export interface FileRouteTypes {
@@ -70,6 +79,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/maps/$id'
     | '/maps/$id/$sid'
+    | '/maps/$id/plan'
     | '/maps/$id/$sid/items/$iid'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -77,6 +87,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/maps/$id'
     | '/maps/$id/$sid'
+    | '/maps/$id/plan'
     | '/maps/$id/$sid/items/$iid'
   id:
     | '__root__'
@@ -84,6 +95,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/maps/$id'
     | '/maps_/$id/$sid'
+    | '/maps_/$id/plan'
     | '/maps_/$id/$sid_/items/$iid'
   fileRoutesById: FileRoutesById
 }
@@ -92,6 +104,7 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   MapsIdRoute: typeof MapsIdRoute
   MapsIdSidRoute: typeof MapsIdSidRoute
+  MapsIdPlanRoute: typeof MapsIdPlanRoute
   MapsIdSidItemsIidRoute: typeof MapsIdSidItemsIidRoute
 }
 
@@ -125,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapsIdSidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maps_/$id/plan': {
+      id: '/maps_/$id/plan'
+      path: '/maps/$id/plan'
+      fullPath: '/maps/$id/plan'
+      preLoaderRoute: typeof MapsIdPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/maps_/$id/$sid_/items/$iid': {
       id: '/maps_/$id/$sid_/items/$iid'
       path: '/maps/$id/$sid/items/$iid'
@@ -140,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   MapsIdRoute: MapsIdRoute,
   MapsIdSidRoute: MapsIdSidRoute,
+  MapsIdPlanRoute: MapsIdPlanRoute,
   MapsIdSidItemsIidRoute: MapsIdSidItemsIidRoute,
 }
 export const routeTree = rootRouteImport
