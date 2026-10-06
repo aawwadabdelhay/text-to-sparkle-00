@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep learning data browser-persistent and backward-compatible through normalization because existing users may already have saved study maps.
+- Course tree plans use a standalone sibling route and the existing store actions, so lesson navigation and completion share saved progress with all other views.
