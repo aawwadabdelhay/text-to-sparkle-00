@@ -3,7 +3,7 @@ import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { BlockEditor } from "@/components/BlockEditor";
-import { actions, fmt, mapItems, stats, useStore } from "@/lib/store";
+import { type Block, type Item, actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/maps_/$id/$sid_/items/$iid")({
   head: () => ({ meta: [
@@ -40,8 +40,17 @@ function ItemPage() {
     </div>
 
     <section className="mt-8"><div className="mb-3 flex items-center gap-2"><BookOpen className="text-primary" /><h2 className="font-display text-2xl">Lesson notebook</h2></div>
-      <BlockEditor blocks={item.blocks} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
+      <BlockEditor blocks={item.blocks?.length ? item.blocks : legacyBlocks(item)} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
     </section>
 
   </Shell>;
+}
+
+// Older lessons kept notes, materials and quiz questions separately; show them as notebook blocks.
+function legacyBlocks(item: Item): Block[] {
+  const out: Block[] = [];
+  if (item.notes) item.notes.split("\n").forEach((t, i) => out.push({ id: `n${i}`, type: "text", text: t }));
+  (item.materials ?? []).forEach((m) => out.push({ id: m.id, type: "embed", text: m.url }));
+  (item.quizzes ?? []).forEach((q) => { out.push({ id: q.id, type: "todo", text: q.question }); out.push({ id: `${q.id}a`, type: "quote", text: `Answer: ${q.answer}` }); });
+  return out;
 }
