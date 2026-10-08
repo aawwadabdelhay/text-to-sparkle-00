@@ -21,6 +21,7 @@ const TEXTY: BlockType[] = ["text", "h1", "h2", "todo", "bullet", "quote", "embe
 export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | undefined; onChange: (b: Block[]) => void }) {
   const blocks = saved?.length ? saved : [{ id: "first", type: "text" as const, text: "" }];
   const [menu, setMenu] = useState<{ id: string; q: string } | null>(null);
+  const [active, setActive] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
   const fileInput = useRef<HTMLInputElement>(null);
@@ -71,10 +72,13 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     <div className="space-y-1">
       {blocks.map((b) => <div key={b.id} className="group relative flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {TEXTY.includes(b.type) ? <TextRow b={b} inputRef={(el) => { refs.current[b.id] = el; }}
+          {active === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
+          {TEXTY.includes(b.type) ? <TextRow onFocus={() => setActive(b.id)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
             onCheck={() => update(b.id, { checked: !b.checked })}
             onKey={(e) => {
+              const k = e.key.toLowerCase();
+              if ((e.metaKey || e.ctrlKey) && (k === "b" || k === "i" || k === "u")) { e.preventDefault(); const f = k === "b" ? "bold" : k === "i" ? "italic" : "underline"; update(b.id, { [f]: !b[f] }); return; }
               if (menu?.id === b.id) {
                 if (e.key === "Enter") { e.preventDefault(); const f = filtered[0]; if (f) pick(b.id, f.type); }
                 if (e.key === "Escape") setMenu(null);
@@ -100,11 +104,11 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   </div>;
 }
 
-function TextRow({ b, inputRef, onText, onKey, onCheck }: { b: Block; inputRef: (el: HTMLInputElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void }) {
+function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus }: { b: Block; onFocus: () => void; inputRef: (el: HTMLInputElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void }) {
   const base = "w-full bg-transparent outline-none placeholder:text-muted-foreground/50";
   const cls = { h1: "font-display text-3xl py-1", h2: "font-display text-xl py-1", quote: "italic", text: "", todo: b.checked ? "line-through text-muted-foreground" : "", bullet: "", embed: "text-sm text-primary" }[b.type as string] ?? "";
   const ph = b.type === "embed" ? "Paste a YouTube or web link…" : b.type === "text" ? "Type “/” for commands…" : b.type.startsWith("h") ? "Heading" : "";
-  const input = <input ref={inputRef} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} placeholder={ph} className={`${base} ${cls} py-1 text-sm`} />;
+  const input = <input ref={inputRef} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onFocus={onFocus} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} py-1 text-sm`} />;
   if (b.type === "todo") return <label className="flex items-center gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 accent-[var(--primary)]" />{input}</label>;
   if (b.type === "bullet") return <div className="flex items-center gap-2"><span className="text-primary">•</span>{input}</div>;
   if (b.type === "quote") return <div className="border-l-4 border-secondary pl-3">{input}</div>;
@@ -136,5 +140,21 @@ function MediaRow({ b }: { b: Block }) {
       {dl}
     </div>
     {isPdf && url && <iframe src={url} title={b.fileName} className="mt-3 h-[480px] w-full rounded border" />}
+  </div>;
+}
+
+const FONTS: Record<string, string> = { sans: "font-sans", serif: "font-display", mono: "font-mono" };
+const COLORS = ["foreground", "primary", "secondary", "accent", "destructive", "muted-foreground"];
+function Toolbar({ b, set }: { b: Block; set: (p: Partial<Block>) => void }) {
+  const btn = (on: boolean | undefined) => `rounded px-2 py-0.5 text-xs ${on ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`;
+  return <div onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== "SELECT") e.preventDefault(); }} className="mb-1 flex flex-wrap items-center gap-1 rounded-lg border bg-popover p-1 shadow">
+    <button type="button" className={`${btn(b.bold)} font-bold`} onClick={() => set({ bold: !b.bold })} aria-label="Bold">B</button>
+    <button type="button" className={`${btn(b.italic)} italic`} onClick={() => set({ italic: !b.italic })} aria-label="Italic">I</button>
+    <button type="button" className={`${btn(b.underline)} underline`} onClick={() => set({ underline: !b.underline })} aria-label="Underline">U</button>
+    <select value={b.font ?? "sans"} onChange={(e) => set({ font: e.target.value })} className="rounded bg-transparent px-1 text-xs outline-none" aria-label="Font">
+      <option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option>
+    </select>
+    <span className="mx-1 h-4 w-px bg-border" />
+    {COLORS.map((c) => <button key={c} type="button" onClick={() => set({ color: c === "foreground" ? "" : c })} aria-label={`Color ${c}`} className={`size-4 rounded-full border ${(b.color || "foreground") === c ? "ring-2 ring-ring" : ""}`} style={{ background: `var(--${c})` }} />)}
   </div>;
 }

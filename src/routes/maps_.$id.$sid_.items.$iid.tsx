@@ -1,11 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { CheckCircle2, ExternalLink, FileText, HelpCircle, Plus, StickyNote, Trash2 } from "lucide-react";
+import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { BlockEditor } from "@/components/BlockEditor";
-import { Input } from "@/components/ui/input";
-import { actions, fmt, mapItems, stats, useStore } from "@/lib/store";
+import { type Block, type Item, actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/maps_/$id/$sid_/items/$iid")({
   head: () => ({ meta: [
@@ -25,10 +23,6 @@ function ItemPage() {
   const map = maps.find((entry) => entry.id === id);
   const section = map?.sections.find((entry) => entry.id === sid);
   const item = section?.items.find((entry) => entry.id === iid);
-  const [materialTitle, setMaterialTitle] = useState("");
-  const [materialUrl, setMaterialUrl] = useState("");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
 
   if (!map || !section || !item) return <Shell><p className="text-muted-foreground">Learning item not found. <Link to="/" className="text-primary underline">Back home</Link></p></Shell>;
   const moduleStats = stats(section.items);
@@ -45,23 +39,18 @@ function ItemPage() {
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Course progress</span><span>{courseStats.pct}%</span></div><div className="mt-3"><Progress value={courseStats.pct} /></div></div>
     </div>
 
-    <section className="mt-8"><div className="mb-3 flex items-center gap-2"><FileText className="text-primary" /><h2 className="font-display text-2xl">Page content</h2></div>
-      <BlockEditor blocks={item.blocks} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
+    <section className="mt-8"><div className="mb-3 flex items-center gap-2"><BookOpen className="text-primary" /><h2 className="font-display text-2xl">Lesson notebook</h2></div>
+      <BlockEditor blocks={item.blocks?.length ? item.blocks : legacyBlocks(item)} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
     </section>
 
-    <section className="mt-8"><div className="mb-3 flex items-center gap-2"><StickyNote className="text-accent" /><h2 className="font-display text-2xl">My notes</h2></div>
-      <textarea value={item.notes ?? ""} onChange={(e) => actions.setNotes(id, sid, iid, e.target.value)} placeholder="Write notes for this item — saved automatically" rows={6} className="w-full rounded-xl border bg-card p-4 text-sm outline-none focus:ring-2 focus:ring-ring" />
-    </section>
-
-    <div className="mt-8 grid gap-8 lg:grid-cols-2">
-      <section><div className="mb-3 flex items-center gap-2"><FileText className="text-primary" /><h2 className="font-display text-2xl">Materials</h2></div>
-        <div className="space-y-2">{(item.materials ?? []).map((material) => <div key={material.id} className="flex items-center gap-3 rounded-lg border bg-card p-3"><a href={material.url} target="_blank" rel="noreferrer" className="flex flex-1 items-center gap-2 text-sm hover:text-primary">{material.title}<ExternalLink size={14} /></a><Button size="icon" variant="ghost" onClick={() => actions.deleteMaterial(id, sid, iid, material.id)} aria-label="Delete material"><Trash2 /></Button></div>)}{(item.materials ?? []).length === 0 && <p className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">No materials added yet.</p>}</div>
-        <form className="mt-3 space-y-2" onSubmit={(e) => { e.preventDefault(); if (!materialTitle.trim() || !materialUrl.trim()) return; actions.addMaterial(id, sid, iid, materialTitle.trim(), materialUrl.trim()); setMaterialTitle(""); setMaterialUrl(""); }}><Input value={materialTitle} onChange={(e) => setMaterialTitle(e.target.value)} placeholder="Material title" className="bg-card" /><div className="flex gap-2"><Input type="url" value={materialUrl} onChange={(e) => setMaterialUrl(e.target.value)} placeholder="https://…" className="bg-card" /><Button><Plus />Add</Button></div></form>
-      </section>
-      <section><div className="mb-3 flex items-center gap-2"><HelpCircle className="text-secondary" /><h2 className="font-display text-2xl">Quiz questions</h2></div>
-        <div className="space-y-2">{(item.quizzes ?? []).map((quiz, index) => <div key={quiz.id} className="rounded-lg border bg-card p-4"><div className="flex gap-3"><span className="text-sm font-semibold text-secondary">{index + 1}</span><div className="flex-1"><p className="font-medium">{quiz.question}</p><p className="mt-2 text-sm text-muted-foreground">Answer: {quiz.answer}</p></div><Button size="icon" variant="ghost" onClick={() => actions.deleteQuiz(id, sid, iid, quiz.id)} aria-label="Delete quiz"><Trash2 /></Button></div></div>)}{(item.quizzes ?? []).length === 0 && <p className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">No quiz questions added yet.</p>}</div>
-        <form className="mt-3 space-y-2" onSubmit={(e) => { e.preventDefault(); if (!question.trim() || !answer.trim()) return; actions.addQuiz(id, sid, iid, question.trim(), answer.trim()); setQuestion(""); setAnswer(""); }}><Input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Question" className="bg-card" /><div className="flex gap-2"><Input value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Answer" className="bg-card" /><Button><Plus />Add</Button></div></form>
-      </section>
-    </div>
   </Shell>;
+}
+
+// Older lessons kept notes, materials and quiz questions separately; show them as notebook blocks.
+function legacyBlocks(item: Item): Block[] {
+  const out: Block[] = [];
+  if (item.notes) item.notes.split("\n").forEach((t, i) => out.push({ id: `n${i}`, type: "text", text: t }));
+  (item.materials ?? []).forEach((m) => out.push({ id: m.id, type: "embed", text: m.url }));
+  (item.quizzes ?? []).forEach((q) => { out.push({ id: q.id, type: "todo", text: q.question }); out.push({ id: `${q.id}a`, type: "quote", text: `Answer: ${q.answer}` }); });
+  return out;
 }
