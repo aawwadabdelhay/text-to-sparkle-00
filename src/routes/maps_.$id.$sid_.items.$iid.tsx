@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CheckCircle2, ExternalLink, FileText, HelpCircle, Plus, StickyNote, Trash2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
+import { BlockEditor } from "@/components/BlockEditor";
 import { Input } from "@/components/ui/input";
 import { actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
@@ -43,6 +44,10 @@ function ItemPage() {
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Module progress</span><span>{moduleStats.pct}%</span></div><div className="mt-3"><Progress value={moduleStats.pct} /></div></div>
       <div className="rounded-xl border bg-card p-4"><div className="flex justify-between text-sm"><span>Course progress</span><span>{courseStats.pct}%</span></div><div className="mt-3"><Progress value={courseStats.pct} /></div></div>
     </div>
+
+    <section className="mt-8"><div className="mb-3 flex items-center gap-2"><FileText className="text-primary" /><h2 className="font-display text-2xl">Page content</h2></div>
+      <BlockEditor blocks={item.blocks} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
+    </section>
 
     <section className="mt-8"><div className="mb-3 flex items-center gap-2"><StickyNote className="text-accent" /><h2 className="font-display text-2xl">My notes</h2></div>
       <textarea value={item.notes ?? ""} onChange={(e) => actions.setNotes(id, sid, iid, e.target.value)} placeholder="Write notes for this item — saved automatically" rows={6} className="w-full rounded-xl border bg-card p-4 text-sm outline-none focus:ring-2 focus:ring-ring" />
