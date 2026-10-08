@@ -18,7 +18,7 @@ const OPTIONS: { type: BlockType; label: string; hint: string; icon: typeof Type
 ];
 const TEXTY: BlockType[] = ["text", "h1", "h2", "todo", "bullet", "quote", "embed"];
 
-export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[]; onChange: (b: Block[]) => void }) {
+export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | undefined; onChange: (b: Block[]) => void }) {
   const blocks = saved?.length ? saved : [{ id: "first", type: "text" as const, text: "" }];
   const [menu, setMenu] = useState<{ id: string; q: string } | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
