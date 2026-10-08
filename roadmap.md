@@ -6,3 +6,4 @@
 - [x] Add item reordering and dedicated item pages
 - [x] Add a separate visual course tree plan with item navigation and completion
 - [x] Verify tree plan navigation and persistent progress in the browser
+- [x] Notion-style '/' page content on lesson pages (text, headings, to-do, photos, documents, video links)
