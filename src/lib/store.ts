@@ -184,14 +184,14 @@ export const fmt = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h ${min
 
 // Delete with a short "Undo" window so accidental deletions never lose data.
 export function deleteItemUndoable(mid: string, sid: string, iid: string) {
-  const sec = getState().maps.find((m) => m.id === mid)?.sections.find((x) => x.id === sid);
+  const sec = state.maps.find((m) => m.id === mid)?.sections.find((x) => x.id === sid);
   const index = sec?.items.findIndex((i) => i.id === iid) ?? -1; const item = sec?.items[index];
   if (!item) return;
   actions.deleteItem(mid, sid, iid);
   toast(`Deleted “${item.title}”`, { duration: 10000, action: { label: "Undo", onClick: () => actions.restoreItem(mid, sid, item, index) } });
 }
 export function deleteSectionUndoable(mid: string, sid: string) {
-  const m = getState().maps.find((x) => x.id === mid); const index = m?.sections.findIndex((x) => x.id === sid) ?? -1; const section = m?.sections[index];
+  const m = state.maps.find((x) => x.id === mid); const index = m?.sections.findIndex((x) => x.id === sid) ?? -1; const section = m?.sections[index];
   if (!section) return;
   actions.deleteSection(mid, sid);
   toast(`Deleted section “${section.title}”`, { duration: 10000, action: { label: "Undo", onClick: () => actions.restoreSection(mid, section, index) } });

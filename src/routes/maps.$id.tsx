@@ -5,7 +5,7 @@ import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { actions, fmt, mapItems, stats, useStore, type ItemType, type Section, type StudyMap } from "@/lib/store";
+import { actions, deleteItemUndoable, deleteSectionUndoable, fmt, mapItems, stats, useStore, type ItemType, type Section, type StudyMap } from "@/lib/store";
 
 export const Route = createFileRoute("/maps/$id")({
   head: () => ({ meta: [
@@ -40,7 +40,7 @@ function SectionCard({ map, section, index, expanded, onToggle }: {
         <span className="hidden rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground sm:inline">{st.done}/{st.total} items</span>
         <Button size="icon" variant="ghost" onClick={() => actions.moveSection(map.id, section.id, -1)} disabled={index === 0} aria-label="Move up"><ArrowUp /></Button>
         <Button size="icon" variant="ghost" onClick={() => actions.moveSection(map.id, section.id, 1)} disabled={index === map.sections.length - 1} aria-label="Move down"><ArrowDown /></Button>
-        <Button size="icon" variant="ghost" onClick={() => confirm("Delete section?") && actions.deleteSection(map.id, section.id)} aria-label="Delete section"><Trash2 /></Button>
+        <Button size="icon" variant="ghost" onClick={() => deleteSectionUndoable(map.id, section.id)} aria-label="Delete section"><Trash2 /></Button>
       </div>
       <div className="mt-3 flex items-center gap-3"><Progress value={st.pct} /><span className="w-40 shrink-0 text-right text-xs text-muted-foreground">{st.done}/{st.total} · {st.pct}% · {fmt(st.leftMin)} left</span></div>
 
@@ -55,7 +55,7 @@ function SectionCard({ map, section, index, expanded, onToggle }: {
                 <Link to="/maps/$id/$sid/items/$iid" params={{ id: map.id, sid: section.id, iid: it.id }}
                   className={`flex-1 truncate text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title}</Link>
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{fmt(it.minutes)}</span>
-                <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(map.id, section.id, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
+                <Button size="icon" variant="ghost" onClick={() => deleteItemUndoable(map.id, section.id, it.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete item"><Trash2 /></Button>
               </li>
             );
           })}
