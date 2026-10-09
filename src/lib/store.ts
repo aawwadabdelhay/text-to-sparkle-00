@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { toast } from "sonner";
 
 export type ItemType = "video" | "reading" | "quiz" | "assignment" | "note";
 export interface Material { id: string; title: string; url: string }
@@ -141,6 +142,8 @@ export const actions = {
   reorderSection: (mid: string, sourceId: string, targetId: string) => set(onMap(mid, (m) => ({ ...m, sections: reorder(m.sections, sourceId, targetId) }))),
   addItem: (mid: string, sid: string, item: Omit<Item, "id" | "done">) => set(onSection(mid, sid, (s) => ({ ...s, items: [...s.items, { ...item, id: uid(), done: false }] }))),
   deleteItem: (mid: string, sid: string, iid: string) => set(onSection(mid, sid, (s) => ({ ...s, items: s.items.filter((i) => i.id !== iid) }))),
+  restoreItem: (mid: string, sid: string, item: Item, index: number) => set(onSection(mid, sid, (s) => { if (s.items.some((i) => i.id === item.id)) return s; const items = [...s.items]; items.splice(Math.min(index, items.length), 0, item); return { ...s, items }; })),
+  restoreSection: (mid: string, section: Section, index: number) => set(onMap(mid, (m) => { if (m.sections.some((x) => x.id === section.id)) return m; const sections = [...m.sections]; sections.splice(Math.min(index, sections.length), 0, section); return { ...m, sections }; })),
   reorderItem: (mid: string, sid: string, sourceId: string, targetId: string) => set(onSection(mid, sid, (s) => ({ ...s, items: reorder(s.items, sourceId, targetId) }))),
   addMaterial: (mid: string, sid: string, iid: string, title: string, url: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, materials: [...(i.materials ?? []), { id: uid(), title, url }] }))),
   deleteMaterial: (mid: string, sid: string, iid: string, materialId: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, materials: (i.materials ?? []).filter((x) => x.id !== materialId) }))),
@@ -178,3 +181,18 @@ export function streak(days: string[]) {
   return n;
 }
 export const fmt = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h ${min % 60}m` : `${min}m`);
+
+// Delete with a short "Undo" window so accidental deletions never lose data.
+export function deleteItemUndoable(mid: string, sid: string, iid: string) {
+  const sec = state.maps.find((m) => m.id === mid)?.sections.find((x) => x.id === sid);
+  const index = sec?.items.findIndex((i) => i.id === iid) ?? -1; const item = sec?.items[index];
+  if (!item) return;
+  actions.deleteItem(mid, sid, iid);
+  toast(`Deleted “${item.title}”`, { duration: 10000, action: { label: "Undo", onClick: () => actions.restoreItem(mid, sid, item, index) } });
+}
+export function deleteSectionUndoable(mid: string, sid: string) {
+  const m = state.maps.find((x) => x.id === mid); const index = m?.sections.findIndex((x) => x.id === sid) ?? -1; const section = m?.sections[index];
+  if (!section) return;
+  actions.deleteSection(mid, sid);
+  toast(`Deleted section “${section.title}”`, { duration: 10000, action: { label: "Undo", onClick: () => actions.restoreSection(mid, section, index) } });
+}

@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, BookOpen, ClipboardCheck, HelpCircle, StickyNote, P
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { actions, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
+import { actions, deleteItemUndoable, deleteSectionUndoable, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
 
 export const Route = createFileRoute("/maps_/$id/$sid")({
   head: () => ({
@@ -70,7 +70,7 @@ function SectionPage() {
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{labels[it.type]} · {fmt(it.minutes)}</span>
               <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, -1)} aria-label="Move up"><ArrowUp /></Button>
               <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, 1)} aria-label="Move down"><ArrowDown /></Button>
-              <Button size="icon" variant="ghost" onClick={() => actions.deleteItem(id, sid, it.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete item"><Trash2 /></Button>
+              <Button size="icon" variant="ghost" onClick={() => deleteItemUndoable(id, sid, it.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete item"><Trash2 /></Button>
             </li>
           );
         })}
