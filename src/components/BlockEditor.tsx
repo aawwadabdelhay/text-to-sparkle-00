@@ -324,7 +324,7 @@ function colorToken(css: string): string {
   } else if (rgb) {
     const parts = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number);
     if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return "";
-    [r, g, b] = parts;
+    r = parts[0] ?? 0; g = parts[1] ?? 0; b = parts[2] ?? 0;
   } else return "";
   const R = r / 255, G = g / 255, B = b / 255;
   const max = Math.max(R, G, B), min = Math.min(R, G, B);
