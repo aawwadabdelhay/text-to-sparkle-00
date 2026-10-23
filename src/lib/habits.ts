@@ -23,7 +23,7 @@ const normalize = (v: Partial<HabitState>): HabitState => {
   return { habits: Array.isArray(v.habits) ? v.habits : DEFAULTS, checkins, updatedAt: typeof v.updatedAt === "number" ? v.updatedAt : 0 };
 };
 
-const initial: HabitState = { habits: DEFAULTS, checkins: {} };
+const initial: HabitState = { habits: DEFAULTS, checkins: {}, updatedAt: 0 };
 let state = initial; let loaded = false;
 const listeners = new Set<() => void>();
 function load() {

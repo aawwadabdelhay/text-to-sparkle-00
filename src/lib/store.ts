@@ -19,6 +19,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const today = () => new Date().toISOString().slice(0, 10);
 
 const initialState: State = {
+  updatedAt: 0,
   studyDays: [],
   learningPaths: [{ id: "path-web", title: "Web development" }],
   maps: [{

@@ -30,9 +30,8 @@ export const saveFile = async (id: string, blob: Blob) => {
   await tx("readwrite", (s) => s.put(blob, id));
   const path = await filePath(id);
   if (!path) return;
-  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
-    upsert: true, contentType: blob.type || undefined,
-  });
+  const opts = blob.type ? { upsert: true as const, contentType: blob.type } : { upsert: true as const };
+  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, opts);
   if (error) console.warn("Could not save file to your account:", error.message);
 };
 

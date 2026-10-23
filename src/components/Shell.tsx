@@ -12,7 +12,7 @@ function SignOutButton() {
         await queryClient.cancelQueries(); // stop in-flight queries before the 401s land
         queryClient.clear(); // drop cached protected data
         await supabase.auth.signOut(); // clear session
-        router.navigate({ to: "/auth", replace: true }); // history REPLACE — Back must not restore the route
+        router.navigate({ to: "/auth", search: { redirect: undefined }, replace: true }); // history REPLACE — Back must not restore the route
       }}
       className="rounded-full border border-input px-4 py-1.5 text-sm text-muted-foreground transition hover:text-foreground"
     >

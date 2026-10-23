@@ -10,9 +10,10 @@ const safe = (r?: string) => (r && r.startsWith("/") && !r.startsWith("//") ? r 
 type Mode = "signin" | "signup" | "forgot";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>) => {
+    const redirect = typeof s["redirect"] === "string" ? (s["redirect"] as string) : undefined;
+    return { redirect };
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Learning Journey Tracker" },

@@ -53,7 +53,7 @@ function ResetPassword() {
             <p className="mt-3 text-sm text-muted-foreground">
               This page is for password-reset links. Open the link from your email, or sign in normally.
             </p>
-            <button onClick={() => navigate({ to: "/auth" })}
+            <button onClick={() => navigate({ to: "/auth", search: { redirect: undefined } })}
               className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
               Go to sign in
             </button>
