@@ -31,7 +31,6 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
 
   // Paste with source formatting: clipboard HTML becomes notebook blocks.
   const paste = (e: React.ClipboardEvent, b: Block) => {
-    if (e.shiftKey) return; // Shift+Paste keeps it plain
     const html = e.clipboardData.getData("text/html");
     if (!html) return;
     e.preventDefault();
@@ -47,7 +46,8 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
       next.splice(i + 1, 0, ...parsed);
     }
     onChange(next);
-    setFocusId(parsed[parsed.length - 1].id);
+    const last = parsed[parsed.length - 1];
+    if (last) setFocusId(last.id);
   };
 
 
@@ -262,7 +262,7 @@ function mergeFmt(a: Fmt, b: Fmt): Fmt {
 function parseDecl(style: string | null): Fmt {
   const f: Fmt = {};
   if (!style) return f;
-  const get = (name: string) => { const m = new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i").exec(style); return m ? m[1].trim() : ""; };
+  const get = (name: string) => { const m = new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i").exec(style); const v = m?.[1]; return v ? v.trim() : ""; };
   const fw = get("font-weight");
   if (fw) f.bold = parseInt(fw, 10) >= 600 || /^(bold|bolder)$/i.test(fw);
   const fst = get("font-style");
@@ -298,7 +298,7 @@ function uniformFmt(root: Element, base: Fmt): Fmt {
   for (const k of ["bold", "italic", "underline", "font", "color"] as const) {
     const vals = leaves.map((l) => l[k]);
     const first = vals[0];
-    if (first && vals.every((v) => v === first)) uni[k] = first;
+    if (first && vals.every((v) => v === first)) (uni as Record<string, unknown>)[k] = first;
   }
   return uni;
 }
