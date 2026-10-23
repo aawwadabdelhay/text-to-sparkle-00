@@ -102,6 +102,15 @@ function shift<T extends { id: string }>(arr: T[], id: string, dir: -1 | 1, same
   const next = [...arr]; next[i] = arr[j] as T; next[j] = cur; return next;
 }
 
+/** Imported playlists often list newest first (e.g. Lecture 11 … Lecture 01); flip them so lecture 1 comes first. */
+export function oldestFirst<T extends { title: string }>(items: T[]): T[] {
+  const nums = items.map((i) => { const m = i.title.match(/(\d+)(?!.*\d)/); return m ? Number(m[1]) : NaN; }).filter((n) => !Number.isNaN(n));
+  if (nums.length < 2) return items;
+  let down = 0, up = 0;
+  for (let k = 1; k < nums.length; k++) { if (nums[k]! < nums[k - 1]!) down++; else if (nums[k]! > nums[k - 1]!) up++; }
+  return down > up ? [...items].reverse() : items;
+}
+
 export const actions = {
   moveMap: (id: string, dir: -1 | 1) => set((s) => ({ ...s, maps: shift(s.maps, id, dir, (a, b) => a.pathId === b.pathId) })),
   placeMap: (id: string, pathId?: string, beforeId?: string) => set((s) => {
@@ -117,6 +126,11 @@ export const actions = {
   movePath: (id: string, dir: -1 | 1) => set((s) => ({ ...s, learningPaths: shift(s.learningPaths, id, dir) })),
   renameLearningPath: (id: string, title: string) => set((s) => ({ ...s, learningPaths: s.learningPaths.map((p) => p.id === id ? { ...p, title } : p) })),
   moveItem: (mid: string, sid: string, iid: string, dir: -1 | 1) => set(onSection(mid, sid, (s) => ({ ...s, items: shift(s.items, iid, dir) }))),
+  sortItems: (mid: string, sid: string, mode: "asc" | "desc" | "reverse") => set(onSection(mid, sid, (s) => {
+    if (mode === "reverse") return { ...s, items: [...s.items].reverse() };
+    const items = [...s.items].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
+    return { ...s, items: mode === "desc" ? items.reverse() : items };
+  })),
   setBlocks: (mid: string, sid: string, iid: string, blocks: Block[]) => set(onItem(mid, sid, iid, (i) => ({ ...i, blocks }))),
   setNotes: (mid: string, sid: string, iid: string, notes: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, notes }))),
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },
@@ -130,7 +144,7 @@ export const actions = {
     }];
     const maps: StudyMap[] = courses.map((c) => ({
       id: uid(), title: c.title, description: c.description ?? "", createdAt: new Date().toISOString(), ...(pathId ? { pathId } : {}),
-      sections: c.sections.map((sec) => ({ id: uid(), title: sec.title, items: sec.items.map((it) => ({
+      sections: c.sections.map((sec) => ({ id: uid(), title: sec.title, items: oldestFirst(sec.items).map((it) => ({
         id: uid(), title: it.title, done: false, type: types.includes(it.type as ItemType) ? (it.type as ItemType) : "video", minutes: Math.max(0, Math.round(it.minutes ?? 0)),
       })) })),
     }));
