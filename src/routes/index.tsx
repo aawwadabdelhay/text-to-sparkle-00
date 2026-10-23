@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { importFromUrl } from "@/lib/import.functions";
+import { HabitCircle } from "@/components/HabitCircle";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -234,6 +235,30 @@ function Index() {
         <JourneyMap onBack={() => setView("cards")} />
       ) : (
         <>
+          <section className="mb-10 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
+            <HabitCircle />
+            <div className="rounded-2xl border bg-card p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">In progress</p>
+              <h2 className="font-display text-2xl">Active learning paths</h2>
+              <ul className="mt-4 space-y-4">
+                {learningPaths.map((p) => {
+                  const courses = maps.filter((m) => m.pathId === p.id); const s = stats(courses.flatMap(mapItems));
+                  return { p, courses, s };
+                }).filter(({ s }) => s.pct < 100).map(({ p, courses, s }) => (
+                  <li key={p.id}>
+                    <div className="flex justify-between text-sm"><span className="font-medium">{p.title}</span><span className="text-muted-foreground">{s.pct}%</span></div>
+                    <div className="mt-1.5"><Progress value={s.pct} /></div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {courses.map((m) => (
+                        <Link key={m.id} to="/maps/$id" params={{ id: m.id }} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground">{m.title} · {stats(mapItems(m)).pct}%</Link>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+                {!learningPaths.length && <li className="text-sm text-muted-foreground">No learning paths yet — add one below.</li>}
+              </ul>
+            </div>
+          </section>
           <form className="mb-8 flex flex-col gap-2 sm:flex-row" onSubmit={async (e) => {
             e.preventDefault(); const t = title.trim(); if (!t || importing) return;
             if (kind === "link") {

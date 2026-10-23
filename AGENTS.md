@@ -12,3 +12,4 @@
 - Keep learning data browser-persistent and backward-compatible through normalization because existing users may already have saved study maps.
 - Course tree plans use a standalone sibling route and the existing store actions, so lesson navigation and completion share saved progress with all other views.
 - Course import scrapes public syllabus pages server-side (src/lib/import.functions.ts via the Firecrawl connector) and maps results into the local store with actions.importCourses; data stays browser-local.
+- Habit tracking lives in its own browser-local store (src/lib/habits.ts, separate localStorage key) so learning data stays untouched.

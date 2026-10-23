@@ -8,3 +8,4 @@
 - [x] Verify tree plan navigation and persistent progress in the browser
 - [x] Notion-style '/' page content on lesson pages (text, headings, to-do, photos, documents, video links)
 - [x] Import a course or learning path from a link (public syllabus scraping)
+- [x] Merge habit circle (wheel, check-ins, calendar) into home dashboard
