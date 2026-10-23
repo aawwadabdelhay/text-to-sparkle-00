@@ -184,3 +184,163 @@ function Toolbar({ b, set }: { b: Block; set: (p: Partial<Block>) => void }) {
     {COLORS.map((c) => <button key={c} type="button" onClick={() => set({ color: c === "foreground" ? "" : c })} aria-label={`Color ${c}`} className={`size-4 rounded-full border ${(b.color || "foreground") === c ? "ring-2 ring-ring" : ""}`} style={{ background: `var(--${c})` }} />)}
   </div>;
 }
+
+// ============= Paste with source formatting =============
+
+type Fmt = { bold?: boolean; italic?: boolean; underline?: boolean; font?: string; color?: string };
+
+const BLOCK_TAGS = new Set(["p", "div", "ul", "ol", "li", "table", "thead", "tbody", "tfoot", "tr", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "section", "article", "figure", "figcaption", "header", "footer", "main", "nav", "aside", "form", "dl", "dt", "dd", "fieldset", "details", "summary"]);
+
+function htmlToBlocks(html: string): Block[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const out: Block[] = [];
+  const walk = (parent: Element, inh: Fmt) => {
+    for (const el of Array.from(parent.children)) {
+      const tag = el.tagName.toLowerCase();
+      if (tag === "style" || tag === "script" || tag === "head" || tag === "meta" || tag === "title" || tag === "link") continue;
+      const f = mergeFmt(inh, parseDecl(el.getAttribute("style")));
+      if (tag === "h1") { pushText(out, "h1", textOf(el), f); continue; }
+      if (/^h[2-6]$/.test(tag)) { pushText(out, "h2", textOf(el), f); continue; }
+      if (tag === "ul" || tag === "ol") { collectList(el, f, out); continue; }
+      if (tag === "blockquote") { pushText(out, "quote", textOf(el), f); continue; }
+      if (tag === "hr") { out.push({ id: uid(), type: "divider" }); continue; }
+      if (tag === "br" || tag === "img" || tag === "svg" || tag === "button" || tag === "input" || tag === "select" || tag === "noscript") continue;
+      if (tag === "table") {
+        for (const tr of Array.from(el.querySelectorAll("tr"))) {
+          const cells = Array.from(tr.children).map((c) => textOf(c)).filter(Boolean);
+          if (cells.length) pushText(out, "text", cells.join("  |  "), f);
+        }
+        continue;
+      }
+      if (tag === "pre") { pushText(out, "text", textOf(el), { ...f, font: "mono" }); continue; }
+      const hasBlock = Array.from(el.children).some((c) => BLOCK_TAGS.has(c.tagName.toLowerCase()));
+      if (hasBlock) { walk(el, f); continue; }
+      const txt = textOf(el);
+      if (!txt) continue;
+      pushText(out, "text", txt, uniformFmt(el, f));
+    }
+  };
+  walk(doc.body, {});
+  if (!out.length) { const t = (doc.body.textContent ?? "").trim(); if (t) pushText(out, "text", t, {}); }
+  return out;
+}
+
+function collectList(listEl: Element, f: Fmt, out: Block[]) {
+  for (const li of Array.from(listEl.children).filter((c) => c.tagName === "LI")) {
+    const todo = !!li.querySelector('input[type="checkbox"]');
+    const clone = li.cloneNode(true) as Element;
+    clone.querySelectorAll("ul, ol").forEach((n) => n.remove());
+    pushText(out, todo ? "todo" : "bullet", clone.textContent ?? "", f);
+    for (const sub of Array.from(li.children).filter((c) => /^ul$|^ol$/.test(c.tagName.toLowerCase()))) collectList(sub, f, out);
+  }
+}
+
+const textOf = (el: Element) => (el.textContent ?? "").replace(/\u00a0/g, " ").replace(/[ \t]+/g, " ").trim();
+
+function pushText(out: Block[], type: BlockType, text: string, f: Fmt) {
+  const t = text.trim();
+  if (!t) return;
+  const b: Block = { id: uid(), type, text: t };
+  if (f.bold) b.bold = true;
+  if (f.italic) b.italic = true;
+  if (f.underline) b.underline = true;
+  if (f.font) b.font = f.font;
+  if (f.color) b.color = f.color;
+  out.push(b);
+}
+
+function mergeFmt(a: Fmt, b: Fmt): Fmt {
+  const r = { ...a };
+  if (b.bold !== undefined) r.bold = b.bold;
+  if (b.italic !== undefined) r.italic = b.italic;
+  if (b.underline !== undefined) r.underline = b.underline;
+  if (b.font) r.font = b.font;
+  if (b.color) r.color = b.color;
+  return r;
+}
+
+function parseDecl(style: string | null): Fmt {
+  const f: Fmt = {};
+  if (!style) return f;
+  const get = (name: string) => { const m = new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i").exec(style); return m ? m[1].trim() : ""; };
+  const fw = get("font-weight");
+  if (fw) f.bold = parseInt(fw, 10) >= 600 || /^(bold|bolder)$/i.test(fw);
+  const fst = get("font-style");
+  if (fst) f.italic = /^(italic|oblique)/i.test(fst);
+  const td = get("text-decoration");
+  if (td) f.underline = /underline/i.test(td);
+  const ff = get("font-family");
+  if (ff) f.font = fontName(ff);
+  const c = get("color");
+  if (c) f.color = colorToken(c);
+  return f;
+}
+
+// If every part of a paragraph shares the same look, apply it to the whole block.
+function uniformFmt(root: Element, base: Fmt): Fmt {
+  const leaves: Fmt[] = [];
+  const collect = (node: Node, f: Fmt) => {
+    for (const n of Array.from(node.childNodes)) {
+      if (n.nodeType === 3) { if ((n.textContent ?? "").trim()) leaves.push(f); }
+      else if (n.nodeType === 1) {
+        const el = n as Element;
+        let fmt = mergeFmt(f, parseDecl(el.getAttribute("style")));
+        const tag = el.tagName.toLowerCase();
+        if (tag === "b" || tag === "strong") fmt = { ...fmt, bold: true };
+        if (tag === "i" || tag === "em") fmt = { ...fmt, italic: true };
+        if (tag === "u") fmt = { ...fmt, underline: true };
+        collect(el, fmt);
+      }
+    }
+  };
+  collect(root, base);
+  const uni: Fmt = {};
+  for (const k of ["bold", "italic", "underline", "font", "color"] as const) {
+    const vals = leaves.map((l) => l[k]);
+    const first = vals[0];
+    if (first && vals.every((v) => v === first)) uni[k] = first;
+  }
+  return uni;
+}
+
+function fontName(ff: string): string {
+  const s = ff.toLowerCase();
+  if (/mono|courier|consolas|menlo|source code/.test(s)) return "mono";
+  if (/sans|arial|helvetica|calibri|segoe|verdana|tahoma|roboto/.test(s)) return "sans";
+  if (/serif|georgia|times|garamond|palatino|book/.test(s)) return "serif";
+  return "sans";
+}
+
+// Maps a pasted color to the closest color in your theme palette.
+function colorToken(css: string): string {
+  const s = css.trim().toLowerCase();
+  if (!s || s === "inherit" || s.startsWith("var(")) return "";
+  let r = 0, g = 0, b = 0;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(s);
+  const rgb = /^rgba?\(([^)]+)\)/.exec(s);
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].split("").map((c) => c + c).join("") : hex[1];
+    r = parseInt(h.slice(0, 2), 16); g = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
+  } else if (rgb) {
+    const parts = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+    if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return "";
+    [r, g, b] = parts;
+  } else return "";
+  const R = r / 255, G = g / 255, B = b / 255;
+  const max = Math.max(R, G, B), min = Math.min(R, G, B);
+  const l = (max + min) / 2, d = max - min;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (sat < 0.15 || l > 0.93 || l < 0.1) return ""; // near white/black/gray: keep default
+  let h = 0;
+  if (d) {
+    if (max === R) h = ((G - B) / d) % 6;
+    else if (max === G) h = (B - R) / d + 2;
+    else h = (R - G) / d + 4;
+    h = Math.round(h * 60); if (h < 0) h += 360;
+  }
+  if (h < 42) return "destructive";
+  if (h < 118) return "accent";
+  if (h < 208) return "primary";
+  if (h < 285) return ""; // blues/purples have no token
+  return "secondary";
+}
