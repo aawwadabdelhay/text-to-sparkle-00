@@ -109,6 +109,22 @@ export const actions = {
   setBlocks: (mid: string, sid: string, iid: string, blocks: Block[]) => set(onItem(mid, sid, iid, (i) => ({ ...i, blocks }))),
   setNotes: (mid: string, sid: string, iid: string, notes: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, notes }))),
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },
+  importCourses: (data: { kind: "course" | "path"; title: string; courses: { title: string; description?: string | undefined; sections: { title: string; items: { title: string; type?: string | undefined; minutes?: number | undefined }[] }[] }[] }) => set((s) => {
+    const types: ItemType[] = ["video", "reading", "quiz", "assignment", "note"];
+    const isPath = data.kind === "path" && data.courses.length > 1 && data.courses.some((c) => c.sections.length > 1);
+    const pathId = isPath ? uid() : undefined;
+    const courses = isPath ? data.courses : [{
+      title: data.title, description: data.courses[0]?.description,
+      sections: data.courses.flatMap((c) => c.sections.length === 1 && data.courses.length > 1 ? [{ ...c.sections[0]!, title: c.title }] : c.sections),
+    }];
+    const maps: StudyMap[] = courses.map((c) => ({
+      id: uid(), title: c.title, description: c.description ?? "", createdAt: new Date().toISOString(), ...(pathId ? { pathId } : {}),
+      sections: c.sections.map((sec) => ({ id: uid(), title: sec.title, items: sec.items.map((it) => ({
+        id: uid(), title: it.title, done: false, type: types.includes(it.type as ItemType) ? (it.type as ItemType) : "video", minutes: Math.max(0, Math.round(it.minutes ?? 0)),
+      })) })),
+    }));
+    return { ...s, maps: [...s.maps, ...maps], learningPaths: pathId ? [...s.learningPaths, { id: pathId, title: data.title }] : s.learningPaths };
+  }),
   updateMap: (id: string, title: string, description: string) => set(onMap(id, (m) => ({ ...m, title, description }))),
   deleteMap: (id: string) => set((s) => ({ ...s, maps: s.maps.filter((m) => m.id !== id) })),
   addLearningPath: (title: string) => { const id = uid(); set((s) => ({ ...s, learningPaths: [...s.learningPaths, { id, title }] })); return id; },
