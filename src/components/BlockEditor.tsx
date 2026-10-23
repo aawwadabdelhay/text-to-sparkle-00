@@ -98,6 +98,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
           {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
             onCheck={() => update(b.id, { checked: !b.checked })}
+            onPaste={(e) => paste(e, b)}
             onKey={(e) => {
               const k = e.key.toLowerCase();
               if ((e.metaKey || e.ctrlKey) && (k === "b" || k === "i" || k === "u")) { e.preventDefault(); const f = k === "b" ? "bold" : k === "i" ? "italic" : "underline"; update(b.id, { [f]: !b[f] }); return; }
