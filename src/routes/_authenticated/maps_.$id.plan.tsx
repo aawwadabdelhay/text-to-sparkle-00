@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +28,8 @@ const types: Record<ItemType, { icon: typeof PlayCircle; label: string; color: s
 function CoursePlanPage() {
   const { id } = Route.useParams();
   const { maps } = useStore();
+  const [drag, setDrag] = useState<{ sid: string; iid: string } | null>(null);
+  const [over, setOver] = useState<string | null>(null);
   const map = maps.find((entry) => entry.id === id);
   if (!map) return <Shell><p>Course not found.</p><Link to="/" className="text-primary">All courses</Link></Shell>;
   const summary = stats(mapItems(map));
@@ -64,6 +67,10 @@ function CoursePlanPage() {
                 <span className="min-w-0 break-words">{section.title}</span>
               </Link>
               <p className="mt-2 text-xs text-muted-foreground">{progress.done}/{progress.total} complete · {progress.pct}%</p>
+              {section.items.length > 1 && <div className="mt-2 flex gap-1">
+                <button onClick={() => actions.sortItems(id, section.id, "asc")} className="rounded border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground">Sort 1→9</button>
+                <button onClick={() => actions.sortItems(id, section.id, "reverse")} className="rounded border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground">Reverse</button>
+              </div>}
             </div>
             <div className="relative">
               <span className="absolute -left-3 top-6 hidden w-3 border-t-2 border-accent/35 sm:block" />
@@ -71,8 +78,13 @@ function CoursePlanPage() {
                 {section.items.map((item) => {
                   const detail = types[item.type];
                   const Icon = detail.icon;
-                  return <li key={item.id} className={`flex min-w-0 flex-col rounded-md border ${item.done ? "border-primary/50 bg-primary/15" : detail.color}`}>
-                    <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid: section.id, iid: item.id }} title={item.title} className="flex min-h-20 flex-1 flex-col gap-2 p-2.5 transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  return <li key={item.id} draggable
+                    onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", item.id); setDrag({ sid: section.id, iid: item.id }); }}
+                    onDragEnd={() => { setDrag(null); setOver(null); }}
+                    onDragOver={(e) => { if (drag?.sid === section.id) { e.preventDefault(); setOver(item.id); } }}
+                    onDrop={(e) => { e.preventDefault(); if (drag && drag.sid === section.id && drag.iid !== item.id) actions.reorderItem(id, section.id, drag.iid, item.id); setDrag(null); setOver(null); }}
+                    className={`flex min-w-0 cursor-grab flex-col rounded-md border transition active:cursor-grabbing ${item.done ? "border-primary/50 bg-primary/15" : detail.color} ${drag?.iid === item.id ? "opacity-40" : ""} ${over === item.id && drag?.iid !== item.id ? "ring-2 ring-accent" : ""}`}>
+                    <Link draggable={false} to="/maps/$id/$sid/items/$iid" params={{ id, sid: section.id, iid: item.id }} title={item.title} className="flex min-h-20 flex-1 flex-col gap-2 p-2.5 transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase"><Icon size={13} />{detail.label}</span>
                       <span className={`break-words text-xs leading-5 ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}>{item.title}</span>
                     </Link>
