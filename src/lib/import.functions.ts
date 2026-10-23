@@ -72,7 +72,7 @@ export const importFromUrl = createServerFn({ method: "POST" })
         formats: [{
           type: "json",
           schema: jsonSchema,
-          prompt: "Extract the full public syllabus/curriculum of this online course or learning path: every course, every section/module/week, and every lecture/lesson inside it with its type (video, reading, quiz, assignment) and duration in minutes when shown. Keep the original order. Do not invent lessons.",
+          prompt: "Extract the full public syllabus/curriculum of this online course or learning path: every course, every section/module/week, and every lecture/lesson inside it with its type (video, reading, quiz, assignment) and duration in minutes when shown. For a single course return exactly ONE entry in courses whose sections are its modules/weeks/chapters; only use several courses for a multi-course learning path. Keep the original order. Do not invent lessons.",
         }],
       }),
     });

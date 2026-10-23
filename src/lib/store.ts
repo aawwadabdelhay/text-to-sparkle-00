@@ -112,7 +112,11 @@ export const actions = {
   importCourses: (data: { kind: "course" | "path"; title: string; courses: { title: string; description?: string | undefined; sections: { title: string; items: { title: string; type?: string | undefined; minutes?: number | undefined }[] }[] }[] }) => set((s) => {
     const types: ItemType[] = ["video", "reading", "quiz", "assignment", "note"];
     const pathId = data.kind === "path" && data.courses.length > 1 ? uid() : undefined;
-    const maps: StudyMap[] = data.courses.map((c) => ({
+    const courses = data.kind === "path" && data.courses.length > 1 ? data.courses : [{
+      title: data.title, description: data.courses[0]?.description,
+      sections: data.courses.flatMap((c) => c.sections.length === 1 && data.courses.length > 1 ? [{ ...c.sections[0]!, title: c.title }] : c.sections),
+    }];
+    const maps: StudyMap[] = courses.map((c) => ({
       id: uid(), title: c.title, description: c.description ?? "", createdAt: new Date().toISOString(), ...(pathId ? { pathId } : {}),
       sections: c.sections.map((sec) => ({ id: uid(), title: sec.title, items: sec.items.map((it) => ({
         id: uid(), title: it.title, done: false, type: types.includes(it.type as ItemType) ? (it.type as ItemType) : "video", minutes: Math.max(0, Math.round(it.minutes ?? 0)),
