@@ -48,7 +48,7 @@ function AuthPage() {
 
   const go = (target?: string) => navigate({ to: safe(target ?? search.redirect), replace: true });
 
-  const oauth = async (provider: "google" | "lovable") => {
+  const oauth = async (provider: "google" | "lovable" | "apple") => {
     if (search.redirect && search.redirect !== "/") sessionStorage.setItem("ljt-auth-redirect", safe(search.redirect));
     const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
     if (result.error) toast.error(result.error.message);
@@ -134,6 +134,10 @@ function AuthPage() {
                 <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
               </div>
               <div className="space-y-2">
+                <button type="button" onClick={() => oauth("apple")}
+                  className="w-full rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
+                  Continue with Apple
+                </button>
                 <button type="button" onClick={() => oauth("google")}
                   className="w-full rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
                   Continue with Google
