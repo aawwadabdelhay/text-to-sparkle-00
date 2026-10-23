@@ -29,6 +29,28 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
 
   useEffect(() => { if (focusId) { refs.current[focusId]?.focus(); setFocusId(null); } }, [focusId, blocks]);
 
+  // Paste with source formatting: clipboard HTML becomes notebook blocks.
+  const paste = (e: React.ClipboardEvent, b: Block) => {
+    if (e.shiftKey) return; // Shift+Paste keeps it plain
+    const html = e.clipboardData.getData("text/html");
+    if (!html) return;
+    e.preventDefault();
+    const parsed = htmlToBlocks(html);
+    if (!parsed.length) return;
+    const empty = b.type === "text" && !b.text;
+    let next: Block[];
+    if (empty) {
+      next = [...parsed, ...blocks.filter((x) => x.id !== b.id)];
+    } else {
+      const i = blocks.findIndex((x) => x.id === b.id);
+      next = [...blocks];
+      next.splice(i + 1, 0, ...parsed);
+    }
+    onChange(next);
+    setFocusId(parsed[parsed.length - 1].id);
+  };
+
+
   const update = (id: string, patch: Partial<Block>) => onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   const insertAfter = (id: string | null, block: Block) => {
     const i = id ? blocks.findIndex((b) => b.id === id) : blocks.length - 1;
