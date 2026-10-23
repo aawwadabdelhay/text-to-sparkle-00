@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedMapsIdRouteImport } from './routes/_authenticated/maps.$id'
@@ -16,47 +19,65 @@ import { Route as AuthenticatedMapsIdSidRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMapsIdPlanRouteImport } from './routes/_authenticated/maps_.$id.plan'
 import { Route as AuthenticatedMapsIdSidItemsIidRouteImport } from './routes/_authenticated/maps_.$id.$sid_.items.$iid'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
-  path: '/',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
-  id: '/_authenticated/stats',
+  id: '/stats',
   path: '/stats',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMapsIdRoute = AuthenticatedMapsIdRouteImport.update({
-  id: '/_authenticated/maps/$id',
+  id: '/maps/$id',
   path: '/maps/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMapsIdSidRoute = AuthenticatedMapsIdSidRouteImport.update({
-  id: '/_authenticated/maps_/$id/$sid',
+  id: '/maps_/$id/$sid',
   path: '/maps/$id/$sid',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMapsIdPlanRoute = AuthenticatedMapsIdPlanRouteImport.update({
-  id: '/_authenticated/maps_/$id/plan',
+  id: '/maps_/$id/plan',
   path: '/maps/$id/plan',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMapsIdSidItemsIidRoute =
   AuthenticatedMapsIdSidItemsIidRouteImport.update({
-    id: '/_authenticated/maps_/$id/$sid_/items/$iid',
+    id: '/maps_/$id/$sid_/items/$iid',
     path: '/maps/$id/$sid/items/$iid',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/stats': typeof AuthenticatedStatsRoute
   '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/stats': typeof AuthenticatedStatsRoute
   '/maps/$id': typeof AuthenticatedMapsIdRoute
   '/maps/$id/$sid': typeof AuthenticatedMapsIdSidRoute
   '/maps/$id/plan': typeof AuthenticatedMapsIdPlanRoute
   '/maps/$id/$sid/items/$iid': typeof AuthenticatedMapsIdSidItemsIidRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/': typeof AuthenticatedIndexRoute
   '/maps/$id': typeof AuthenticatedMapsIdRoute
@@ -66,6 +87,9 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/maps/$id': typeof AuthenticatedMapsIdRoute
@@ -76,14 +100,18 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/stats'
     | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/stats'
     | '/maps/$id'
     | '/maps/$id/$sid'
     | '/maps/$id/plan'
     | '/maps/$id/$sid/items/$iid'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/auth'
+    | '/reset-password'
     | '/stats'
     | '/'
     | '/maps/$id'
@@ -92,6 +120,9 @@ export interface FileRouteTypes {
     | '/maps/$id/$sid/items/$iid'
   id:
     | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
     | '/_authenticated/stats'
     | '/_authenticated/'
     | '/_authenticated/maps/$id'
@@ -101,6 +132,80 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stats': {
+      id: '/_authenticated/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/maps/$id': {
+      id: '/_authenticated/maps/$id'
+      path: '/maps/$id'
+      fullPath: '/maps/$id'
+      preLoaderRoute: typeof AuthenticatedMapsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/maps_/$id/$sid': {
+      id: '/_authenticated/maps_/$id/$sid'
+      path: '/maps/$id/$sid'
+      fullPath: '/maps/$id/$sid'
+      preLoaderRoute: typeof AuthenticatedMapsIdSidRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/maps_/$id/plan': {
+      id: '/_authenticated/maps_/$id/plan'
+      path: '/maps/$id/plan'
+      fullPath: '/maps/$id/plan'
+      preLoaderRoute: typeof AuthenticatedMapsIdPlanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/maps_/$id/$sid_/items/$iid': {
+      id: '/_authenticated/maps_/$id/$sid_/items/$iid'
+      path: '/maps/$id/$sid/items/$iid'
+      fullPath: '/maps/$id/$sid/items/$iid'
+      preLoaderRoute: typeof AuthenticatedMapsIdSidItemsIidRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedMapsIdRoute: typeof AuthenticatedMapsIdRoute
@@ -109,60 +214,22 @@ export interface RootRouteChildren {
   AuthenticatedMapsIdSidItemsIidRoute: typeof AuthenticatedMapsIdSidItemsIidRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/stats': {
-      id: '/_authenticated/stats'
-      path: '/stats'
-      fullPath: '/stats'
-      preLoaderRoute: typeof AuthenticatedStatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/maps/$id': {
-      id: '/_authenticated/maps/$id'
-      path: '/maps/$id'
-      fullPath: '/maps/$id'
-      preLoaderRoute: typeof AuthenticatedMapsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/maps_/$id/$sid': {
-      id: '/_authenticated/maps_/$id/$sid'
-      path: '/maps/$id/$sid'
-      fullPath: '/maps/$id/$sid'
-      preLoaderRoute: typeof AuthenticatedMapsIdSidRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/maps_/$id/plan': {
-      id: '/_authenticated/maps_/$id/plan'
-      path: '/maps/$id/plan'
-      fullPath: '/maps/$id/plan'
-      preLoaderRoute: typeof AuthenticatedMapsIdPlanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/maps_/$id/$sid_/items/$iid': {
-      id: '/_authenticated/maps_/$id/$sid_/items/$iid'
-      path: '/maps/$id/$sid/items/$iid'
-      fullPath: '/maps/$id/$sid/items/$iid'
-      preLoaderRoute: typeof AuthenticatedMapsIdSidItemsIidRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedMapsIdRoute: AuthenticatedMapsIdRoute,
   AuthenticatedMapsIdSidRoute: AuthenticatedMapsIdSidRoute,
   AuthenticatedMapsIdPlanRoute: AuthenticatedMapsIdPlanRoute,
   AuthenticatedMapsIdSidItemsIidRoute: AuthenticatedMapsIdSidItemsIidRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

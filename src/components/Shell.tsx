@@ -1,5 +1,25 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+function SignOutButton() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  return (
+    <button
+      onClick={async () => {
+        await queryClient.cancelQueries(); // stop in-flight queries before the 401s land
+        queryClient.clear(); // drop cached protected data
+        await supabase.auth.signOut(); // clear session
+        router.navigate({ to: "/auth", replace: true }); // history REPLACE — Back must not restore the route
+      }}
+      className="rounded-full border border-input px-4 py-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+    >
+      Sign out
+    </button>
+  );
+}
 
 export function Progress({ value, thick }: { value: number; thick?: boolean }) {
   return (
@@ -33,6 +53,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link to="/" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
             <Link to="/stats" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Stats</Link>
           </nav>
+          <SignOutButton />
         </div>
       </header>
       <main className="mx-auto max-w-[1600px] px-5 py-10 sm:px-8">{children}</main>

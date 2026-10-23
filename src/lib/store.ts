@@ -12,7 +12,7 @@ export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
 export interface LearningPath { id: string; title: string }
 export const nodePos = (s: Section, i: number) => ({ x: s.x ?? 40 + i * 270, y: s.y ?? 60 + (i % 2) * 170 });
-interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[] }
+interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; updatedAt: number }
 
 const KEY = "ljt-state-v1";
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -43,6 +43,7 @@ const normalize = (value: Partial<State>): State => ({
     : initialState.maps,
   studyDays: Array.isArray(value.studyDays) ? value.studyDays : [],
   learningPaths: Array.isArray(value.learningPaths) ? value.learningPaths : [],
+  updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
 });
 
 let state: State = initialState;
@@ -53,10 +54,19 @@ function load() {
   loaded = true;
   try { const raw = localStorage.getItem(KEY); if (raw) state = normalize(JSON.parse(raw) as Partial<State>); } catch {}
 }
-function set(fn: (s: State) => State) {
+const persistListeners = new Set<() => void>();
+export const onPersist = (cb: () => void) => { persistListeners.add(cb); return () => { persistListeners.delete(cb); }; };
+export const getState = () => { load(); return state; };
+function set(fn: (s: State) => State, touch = true) {
   state = fn(state);
+  if (touch) state = { ...state, updatedAt: Date.now() };
   localStorage.setItem(KEY, JSON.stringify(state));
   listeners.forEach((l) => l());
+  if (touch) persistListeners.forEach((l) => l());
+}
+/** Replaces local data with a copy pulled from the account (no re-push loop). */
+export function replaceState(next: unknown) {
+  set(() => normalize(next as Partial<State>), false);
 }
 const serverSnap = initialState;
 export function useStore() {
