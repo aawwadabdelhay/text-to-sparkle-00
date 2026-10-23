@@ -127,7 +127,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   </div>;
 }
 
-function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel }: { b: Block; onFocus: () => void; onSel: (has: boolean) => void; inputRef: (el: HTMLTextAreaElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void }) {
+function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste }: { b: Block; onFocus: () => void; onSel: (has: boolean) => void; inputRef: (el: HTMLTextAreaElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void; onPaste: (e: React.ClipboardEvent) => void }) {
   const base = "w-full bg-transparent outline-none placeholder:text-muted-foreground/50";
   const cls = { h1: "font-display text-3xl py-1", h2: "font-display text-xl py-1", quote: "italic", text: "", todo: b.checked ? "line-through text-muted-foreground" : "", bullet: "", embed: "text-sm text-primary" }[b.type as string] ?? "";
   const ph = b.type === "embed" ? "Paste a YouTube or web link…" : b.type === "text" ? "Type “/” for commands…" : b.type.startsWith("h") ? "Heading" : "";
