@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowDown, ArrowUp, BookOpen, ClipboardCheck, HelpCircle, StickyNote, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { ArrowDown01, ArrowDown10, ArrowUpDown, BookOpen, ClipboardCheck, GripVertical, HelpCircle, StickyNote, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,6 +28,7 @@ function SectionPage() {
   const { id, sid } = Route.useParams();
   const { maps } = useStore();
   const [title, setTitle] = useState(""); const [min, setMin] = useState("15"); const [type, setType] = useState<ItemType>("video");
+  const [drag, setDrag] = useState<string | null>(null); const [over, setOver] = useState<string | null>(null);
   const m = maps.find((x) => x.id === id);
   const sec = m?.sections.find((x) => x.id === sid);
   if (!m || !sec) return <Shell><p className="text-muted-foreground">Module not found. <Link to="/" className="text-primary underline">Back</Link></p></Shell>;
@@ -59,17 +60,30 @@ function SectionPage() {
         </div>
       )}
 
-      <ul className="mt-6 divide-y rounded-2xl border bg-card">
+      {sec.items.length > 1 && (
+        <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Order:</span>
+          <Button size="sm" variant="outline" onClick={() => actions.sortItems(id, sid, "asc")}><ArrowDown01 /> 1 → 9</Button>
+          <Button size="sm" variant="outline" onClick={() => actions.sortItems(id, sid, "desc")}><ArrowDown10 /> 9 → 1</Button>
+          <Button size="sm" variant="outline" onClick={() => actions.sortItems(id, sid, "reverse")}><ArrowUpDown /> Reverse</Button>
+          <span className="text-xs text-muted-foreground">or drag the <GripVertical size={12} className="inline" /> handle to move an item</span>
+        </div>
+      )}
+      <ul className="mt-3 divide-y rounded-2xl border bg-card">
         {sec.items.map((it) => {
           const Icon = icons[it.type];
           return (
-            <li key={it.id} className="group flex items-center gap-3 px-4 py-3">
+            <li key={it.id}
+              onDragOver={(e) => { if (drag) { e.preventDefault(); setOver(it.id); } }}
+              onDragLeave={() => setOver((o) => (o === it.id ? null : o))}
+              onDrop={(e) => { e.preventDefault(); if (drag && drag !== it.id) actions.reorderItem(id, sid, drag, it.id); setDrag(null); setOver(null); }}
+              className={`group flex items-center gap-3 px-4 py-3 transition ${drag === it.id ? "opacity-40" : ""} ${over === it.id && drag !== it.id ? "bg-primary/10 shadow-[inset_0_2px_0_hsl(var(--primary))]" : ""}`}>
+              <span draggable onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", it.id); const row = e.currentTarget.closest("li"); if (row) e.dataTransfer.setDragImage(row, 20, 20); setDrag(it.id); }} onDragEnd={() => { setDrag(null); setOver(null); }}
+                className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing" aria-label="Drag to reorder" title="Drag to reorder"><GripVertical size={18} /></span>
               <Checkbox checked={it.done} onCheckedChange={() => actions.toggleItem(id, sid, it.id)} aria-label={`Mark ${it.title} complete`} />
               <Icon size={17} className="text-primary" />
-              <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid, iid: it.id }} className={`flex-1 text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title} →</Link>
+              <Link to="/maps/$id/$sid/items/$iid" params={{ id, sid, iid: it.id }} draggable={false} className={`flex-1 text-sm transition hover:text-primary ${it.done ? "text-muted-foreground line-through" : ""}`}>{it.title} →</Link>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{labels[it.type]} · {fmt(it.minutes)}</span>
-              <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, -1)} aria-label="Move up"><ArrowUp /></Button>
-              <Button size="icon" variant="ghost" onClick={() => actions.moveItem(id, sid, it.id, 1)} aria-label="Move down"><ArrowDown /></Button>
               <Button size="icon" variant="ghost" onClick={() => deleteItemUndoable(id, sid, it.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete item"><Trash2 /></Button>
             </li>
           );
