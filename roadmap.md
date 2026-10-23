@@ -9,3 +9,6 @@
 - [x] Notion-style '/' page content on lesson pages (text, headings, to-do, photos, documents, video links)
 - [x] Import a course or learning path from a link (public syllabus scraping)
 - [x] Merge habit circle (wheel, check-ins, calendar) into home dashboard
+- [x] Sign up / sign in with email, Google and Lovable; password reset page
+- [x] Sync learning data, habits and uploaded files to the account (any device)
+- [ ] User creates their real account and confirms their email (blocks on user)
