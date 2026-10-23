@@ -27,7 +27,7 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background bg-app">
       <header className="sticky top-0 z-10 border-b bg-background/70 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link to="/" className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</Link>
           <nav className="flex gap-1 rounded-full bg-muted p-1">
             <Link to="/" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
@@ -35,7 +35,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-5 py-10">{children}</main>
+      <main className="mx-auto max-w-[1600px] px-5 py-10 sm:px-8">{children}</main>
     </div>
   );
 }
