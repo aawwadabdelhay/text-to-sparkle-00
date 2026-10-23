@@ -111,8 +111,9 @@ export const actions = {
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },
   importCourses: (data: { kind: "course" | "path"; title: string; courses: { title: string; description?: string | undefined; sections: { title: string; items: { title: string; type?: string | undefined; minutes?: number | undefined }[] }[] }[] }) => set((s) => {
     const types: ItemType[] = ["video", "reading", "quiz", "assignment", "note"];
-    const pathId = data.kind === "path" && data.courses.length > 1 ? uid() : undefined;
-    const courses = data.kind === "path" && data.courses.length > 1 ? data.courses : [{
+    const isPath = data.kind === "path" && data.courses.length > 1 && data.courses.some((c) => c.sections.length > 1);
+    const pathId = isPath ? uid() : undefined;
+    const courses = isPath ? data.courses : [{
       title: data.title, description: data.courses[0]?.description,
       sections: data.courses.flatMap((c) => c.sections.length === 1 && data.courses.length > 1 ? [{ ...c.sections[0]!, title: c.title }] : c.sections),
     }];
