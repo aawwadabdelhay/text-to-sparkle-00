@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
@@ -21,9 +21,9 @@ const TEXTY: BlockType[] = ["text", "h1", "h2", "todo", "bullet", "quote", "embe
 export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | undefined; onChange: (b: Block[]) => void }) {
   const blocks = saved?.length ? saved : [{ id: "first", type: "text" as const, text: "" }];
   const [menu, setMenu] = useState<{ id: string; q: string } | null>(null);
-  const [active, setActive] = useState<string | null>(null);
+  const [tools, setTools] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
-  const refs = useRef<Record<string, HTMLInputElement | null>>({});
+  const refs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const fileInput = useRef<HTMLInputElement>(null);
   const uploadTarget = useRef<{ id: string; type: BlockType } | null>(null);
 
@@ -72,8 +72,8 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     <div className="space-y-1">
       {blocks.map((b) => <div key={b.id} className="group relative flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {active === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
-          {TEXTY.includes(b.type) ? <TextRow onFocus={() => setActive(b.id)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
+          {tools === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
+          {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
             onCheck={() => update(b.id, { checked: !b.checked })}
             onKey={(e) => {
@@ -84,7 +84,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
                 if (e.key === "Escape") setMenu(null);
                 return;
               }
-              if (e.key === "Enter") { e.preventDefault(); const keep = b.type === "todo" || b.type === "bullet" ? b.type : "text"; setFocusId(insertAfter(b.id, { id: uid(), type: keep, text: "" })); }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const keep = b.type === "todo" || b.type === "bullet" ? b.type : "text"; setFocusId(insertAfter(b.id, { id: uid(), type: keep, text: "" })); }
               if (e.key === "Backspace" && !b.text) {
                 if (b.type !== "text") { e.preventDefault(); update(b.id, { type: "text" }); }
                 else if (blocks.length > 1) { e.preventDefault(); remove(b.id); }
@@ -104,13 +104,16 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   </div>;
 }
 
-function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus }: { b: Block; onFocus: () => void; inputRef: (el: HTMLInputElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void }) {
+function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel }: { b: Block; onFocus: () => void; onSel: (has: boolean) => void; inputRef: (el: HTMLTextAreaElement | null) => void; onText: (t: string) => void; onKey: (e: React.KeyboardEvent) => void; onCheck: () => void }) {
   const base = "w-full bg-transparent outline-none placeholder:text-muted-foreground/50";
   const cls = { h1: "font-display text-3xl py-1", h2: "font-display text-xl py-1", quote: "italic", text: "", todo: b.checked ? "line-through text-muted-foreground" : "", bullet: "", embed: "text-sm text-primary" }[b.type as string] ?? "";
   const ph = b.type === "embed" ? "Paste a YouTube or web link…" : b.type === "text" ? "Type “/” for commands…" : b.type.startsWith("h") ? "Heading" : "";
-  const input = <input ref={inputRef} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onFocus={onFocus} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} py-1 text-sm`} />;
-  if (b.type === "todo") return <label className="flex items-center gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 accent-[var(--primary)]" />{input}</label>;
-  if (b.type === "bullet") return <div className="flex items-center gap-2"><span className="text-primary">•</span>{input}</div>;
+  const own = useRef<HTMLTextAreaElement | null>(null);
+  useLayoutEffect(() => { const el = own.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [b.text, b.type, b.font]);
+  const sel = (e: React.SyntheticEvent<HTMLTextAreaElement>) => { const t = e.currentTarget; onSel(t.selectionStart !== t.selectionEnd); };
+  const input = <textarea rows={1} ref={(el) => { own.current = el; inputRef(el); }} onSelect={sel} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onFocus={onFocus} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} block resize-none overflow-hidden whitespace-pre-wrap break-words py-1 text-sm leading-relaxed`} />;
+  if (b.type === "todo") return <label className="flex items-start gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 mt-2 accent-[var(--primary)]" />{input}</label>;
+  if (b.type === "bullet") return <div className="flex items-start gap-2"><span className="py-1 text-primary">•</span>{input}</div>;
   if (b.type === "quote") return <div className="border-l-4 border-secondary pl-3">{input}</div>;
   if (b.type === "embed") return <div>{input}<Embed url={b.text ?? ""} /></div>;
   return input;
