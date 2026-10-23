@@ -318,10 +318,10 @@ function colorToken(css: string): string {
   let r = 0, g = 0, b = 0;
   const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(s);
   const rgb = /^rgba?\(([^)]+)\)/.exec(s);
-  if (hex) {
+  if (hex?.[1]) {
     const h = hex[1].length === 3 ? hex[1].split("").map((c) => c + c).join("") : hex[1];
     r = parseInt(h.slice(0, 2), 16); g = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
-  } else if (rgb) {
+  } else if (rgb?.[1]) {
     const parts = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number);
     if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return "";
     r = parts[0] ?? 0; g = parts[1] ?? 0; b = parts[2] ?? 0;
