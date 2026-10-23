@@ -93,7 +93,7 @@ function AuthPage() {
           <p className="mt-3 text-sm text-muted-foreground">
             We sent a confirmation link to <span className="text-foreground">{email}</span>. Open it to activate your account, then sign in here.
           </p>
-          <button onClick={() => setMode("signin")} className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <button onClick={() => { setMode("signin"); setAwaitConfirm(false); }} className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Back to sign in
           </button>
         </div>
