@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { actions, fmt, mapItems, stats, streak, useStore, type Item, type ItemType, type StudyMap } from "@/lib/store";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { importFromUrl } from "@/lib/import.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -201,7 +205,9 @@ function JourneyMap({ onBack }: { onBack: () => void }) {
 function Index() {
   const { maps, studyDays, learningPaths } = useStore();
   const [title, setTitle] = useState("");
-  const [kind, setKind] = useState<"course" | "path">("course");
+  const [kind, setKind] = useState<"course" | "path" | "link">("course");
+  const [importing, setImporting] = useState(false);
+  const importFn = useServerFn(importFromUrl);
   const [view, setView] = useState<"cards" | "map">("cards");
   const all = stats(maps.flatMap(mapItems));
   const standalone = maps.filter((m) => !m.pathId || !learningPaths.some((p) => p.id === m.pathId));
