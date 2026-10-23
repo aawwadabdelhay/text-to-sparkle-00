@@ -3,7 +3,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { Shell, Progress } from "@/components/Shell";
 import { fmt, mapItems, stats, streak, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/stats")({
+export const Route = createFileRoute("/_authenticated/stats")({
   head: () => ({
     meta: [
       { title: "Progress analytics — Learning Journey Tracker" },

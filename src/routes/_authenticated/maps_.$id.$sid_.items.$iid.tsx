@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BlockEditor } from "@/components/BlockEditor";
 import { type Block, type Item, actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/maps_/$id/$sid_/items/$iid")({
+export const Route = createFileRoute("/_authenticated/maps_/$id/$sid_/items/$iid")({
   head: () => ({ meta: [
     { title: "Learning item — Learning Journey Tracker" },
     { name: "description", content: "Manage learning materials and quiz questions for a study item." },

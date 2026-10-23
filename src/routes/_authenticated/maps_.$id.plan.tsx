@@ -4,7 +4,7 @@ import { Shell, Progress, Ring } from "@/components/Shell";
 import { Checkbox } from "@/components/ui/checkbox";
 import { actions, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
 
-export const Route = createFileRoute("/maps_/$id/plan")({
+export const Route = createFileRoute("/_authenticated/maps_/$id/plan")({
   head: () => ({ meta: [
     { title: "Course tree plan — Learning Journey Tracker" },
     { name: "description", content: "Follow your course section by section with a visual tree plan and track each lesson's completion." },

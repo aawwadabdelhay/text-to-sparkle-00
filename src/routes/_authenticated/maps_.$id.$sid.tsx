@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { actions, deleteItemUndoable, deleteSectionUndoable, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
 
-export const Route = createFileRoute("/maps_/$id/$sid")({
+export const Route = createFileRoute("/_authenticated/maps_/$id/$sid")({
   head: () => ({
     meta: [
       { title: "Module breakdown — Learning Journey Tracker" },

@@ -16,7 +16,7 @@ import { Download } from "lucide-react";
 import { importFromUrl } from "@/lib/import.functions";
 import { HabitCircle } from "@/components/HabitCircle";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Learning Journey Tracker — Paths & courses" },
