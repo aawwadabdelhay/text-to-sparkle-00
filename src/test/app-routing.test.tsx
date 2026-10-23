@@ -5,6 +5,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
+// The auth gate and root shell read the auth session; the smoke tests only
+// assert that routes mount and paint, so answer those calls locally.
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    auth: {
+      getUser: vi.fn(async () => ({ data: { user: { id: "u1" } }, error: null })),
+      getSession: vi.fn(async () => ({ data: { session: null } })),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: () => undefined } } })),
+    },
+  },
+}));
+vi.mock("@/integrations/lovable/index", () => ({
+  lovable: { auth: { signInWithOAuth: vi.fn(async () => ({ error: null, redirected: false })) } },
+}));
+
 function renderAt(path: string) {
   const queryClient = new QueryClient();
   const router = createRouter({
