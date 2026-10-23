@@ -49,11 +49,10 @@ function AuthPage() {
 
   const oauth = async (provider: "google" | "apple") => {
     if (search.redirect && search.redirect !== "/") sessionStorage.setItem("ljt-auth-redirect", safe(search.redirect));
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin },
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
     });
-    if (error) toast.error(error.message);
+    if (result.error) toast.error(result.error.message ?? "Sign-in failed. Please try again.");
   };
 
   const submit = async (e: FormEvent) => {
