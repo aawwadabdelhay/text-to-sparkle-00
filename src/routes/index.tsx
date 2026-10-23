@@ -228,13 +228,26 @@ function Index() {
         <JourneyMap onBack={() => setView("cards")} />
       ) : (
         <>
-          <form className="mb-8 flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); const t = title.trim(); if (!t) return; if (kind === "path") actions.addLearningPath(t); else actions.addMap(t); setTitle(""); }}>
-            <select value={kind} onChange={(e) => setKind(e.target.value as "course" | "path")} className="h-11 rounded-md border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-ring" aria-label="What to add">
+          <form className="mb-8 flex flex-col gap-2 sm:flex-row" onSubmit={async (e) => {
+            e.preventDefault(); const t = title.trim(); if (!t || importing) return;
+            if (kind === "link") {
+              setImporting(true);
+              try {
+                const r = await importFn({ data: { url: t } });
+                if (r.error || !r.result) toast.error(r.error ?? "Import failed");
+                else { actions.importCourses(r.result); setTitle(""); toast.success(`Imported “${r.result.title}” — ${r.result.courses.reduce((a, c) => a + c.sections.reduce((b, s) => b + s.items.length, 0), 0)} lessons`); }
+              } catch { toast.error("That doesn't look like a valid link."); } finally { setImporting(false); }
+              return;
+            }
+            if (kind === "path") actions.addLearningPath(t); else actions.addMap(t); setTitle("");
+          }}>
+            <select value={kind} onChange={(e) => setKind(e.target.value as "course" | "path" | "link")} className="h-11 rounded-md border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-ring" aria-label="What to add">
               <option value="course">Course</option>
               <option value="path">Learning path</option>
+              <option value="link">Import from link</option>
             </select>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "path" ? "New learning path name" : "New course name"} className="h-11 flex-1 bg-card" />
-            <Button className="h-11"><Plus />Add</Button>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "link" ? "Paste a course link (YouTube playlist, Udemy, Coursera, LinkedIn Learning…)" : kind === "path" ? "New learning path name" : "New course name"} className="h-11 flex-1 bg-card" />
+            <Button className="h-11" disabled={importing}>{kind === "link" ? <><Download />{importing ? "Importing… (up to a minute)" : "Import"}</> : <><Plus />Add</>}</Button>
           </form>
 
           <div className="space-y-5">
