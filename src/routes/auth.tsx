@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import "@lovable.dev/cloud-auth-js/styles.css";
 import { toast } from "sonner";
 
 const safe = (r?: string) => (r && r.startsWith("/") && !r.startsWith("//") ? r : "/");
@@ -48,11 +46,13 @@ function AuthPage() {
 
   const go = (target?: string) => navigate({ to: safe(target ?? search.redirect), replace: true });
 
-  const oauth = async (provider: "google" | "lovable" | "apple") => {
+  const oauth = async (provider: "google" | "apple") => {
     if (search.redirect && search.redirect !== "/") sessionStorage.setItem("ljt-auth-redirect", safe(search.redirect));
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
-    if (result.error) toast.error(result.error.message);
-    // When result.redirected the browser is navigating to the provider; nothing else to do.
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error(error.message);
   };
 
   const submit = async (e: FormEvent) => {
@@ -135,15 +135,21 @@ function AuthPage() {
               </div>
               <div className="space-y-2">
                 <button type="button" onClick={() => oauth("apple")}
-                  className="w-full rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
+                  className="flex w-full items-center justify-center gap-3 rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                    <path d="M17.05 12.54c-.03-2.62 2.14-3.88 2.24-3.94-1.22-1.79-3.12-2.03-3.8-2.06-1.62-.16-3.15.95-3.97.95-.82 0-2.08-.93-3.42-.9-1.76.03-3.38 1.02-4.28 2.59-1.83 3.17-.47 7.87 1.31 10.44.87 1.26 1.91 2.67 3.27 2.62 1.31-.05 1.81-.85 3.4-.85 1.58 0 2.03.85 3.42.82 1.42-.03 2.32-1.28 3.19-2.55 1-1.46 1.4-2.87 1.42-2.95-.03-.01-2.74-1.05-2.78-4.17zM14.44 4.83c.72-.88 1.21-2.09 1.08-3.3-1.04.04-2.31.69-3.06 1.56-.67.78-1.26 2.02-1.1 3.21 1.16.09 2.35-.59 3.08-1.47z"/>
+                  </svg>
                   Continue with Apple
                 </button>
                 <button type="button" onClick={() => oauth("google")}
-                  className="w-full rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
+                  className="flex w-full items-center justify-center gap-3 rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+                    <path fill="#EA4335" d="M12 5.04c1.62 0 3.06.56 4.2 1.66l3.12-3.12C17.4 1.79 14.89.75 12 .75 7.9.75 4.36 3.09 2.65 6.53l3.64 2.83C7.17 6.94 9.38 5.04 12 5.04z"/>
+                    <path fill="#4285F4" d="M23.25 12.26c0-.79-.07-1.55-.2-2.26H12v4.51h6.32c-.27 1.46-1.09 2.7-2.32 3.53l3.62 2.81c2.12-1.96 3.63-4.85 3.63-8.59z"/>
+                    <path fill="#FBBC05" d="M6.29 14.16a6.1 6.1 0 0 1 0-3.9L2.65 7.43a10.53 10.53 0 0 0 0 9.56l3.64-2.83z"/>
+                    <path fill="#34A853" d="M12 23.25c3.04 0 5.59-1 7.45-2.72l-3.62-2.81c-1 .68-2.28 1.08-3.83 1.08-2.62 0-4.83-1.9-5.71-4.32l-3.64 2.83c1.71 3.44 5.25 5.94 9.35 5.94z"/>
+                  </svg>
                   Continue with Google
-                </button>
-                <button type="button" onClick={() => oauth("lovable")} className="w-full">
-                  <span className="lovable-auth-button block w-full" style={{ width: "100%" }}>Continue with Lovable</span>
                 </button>
               </div>
             </>
