@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { actions, deleteItemUndoable, deleteSectionUndoable, fmt, mapItems, stats, useStore, type ItemType, type Section, type StudyMap } from "@/lib/store";
 
-export const Route = createFileRoute("/maps/$id")({
+export const Route = createFileRoute("/_authenticated/maps/$id")({
   head: () => ({ meta: [
     { title: "Course sections — Learning Journey Tracker" },
     { name: "description", content: "Organize a course into ordered sections with videos, quizzes, assignments and notes." },

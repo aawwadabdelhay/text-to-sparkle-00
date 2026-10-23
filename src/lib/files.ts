@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Uploaded files live in the browser's IndexedDB (too large for localStorage).
-const DB = "ljt-files", STORE = "files";
+// Uploaded files live in the browser's IndexedDB (fast, offline-friendly) and
+// are mirrored to the account's private cloud storage so they follow the user
+// to other devices.
+const DB = "ljt-files", STORE = "files", BUCKET = "lesson-files";
 function open(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
     const r = indexedDB.open(DB, 1);
@@ -18,9 +21,36 @@ async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
     q.onerror = () => rej(q.error);
   });
 }
-export const saveFile = (id: string, blob: Blob) => tx("readwrite", (s) => s.put(blob, id));
-export const loadFile = (id: string) => tx<Blob | undefined>("readonly", (s) => s.get(id));
-export const removeFile = (id: string) => tx("readwrite", (s) => s.delete(id));
+async function filePath(id: string): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user ? `${data.user.id}/${id}` : null;
+}
+
+export const saveFile = async (id: string, blob: Blob) => {
+  await tx("readwrite", (s) => s.put(blob, id));
+  const path = await filePath(id);
+  if (!path) return;
+  const opts = blob.type ? { upsert: true as const, contentType: blob.type } : { upsert: true as const };
+  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, opts);
+  if (error) console.warn("Could not save file to your account:", error.message);
+};
+
+export const loadFile = async (id: string) => {
+  const local = await tx<Blob | undefined>("readonly", (s) => s.get(id));
+  if (local) return local;
+  const path = await filePath(id);
+  if (!path) return undefined;
+  const { data, error } = await supabase.storage.from(BUCKET).download(path);
+  if (error || !data) return undefined;
+  tx("readwrite", (s) => s.put(data, id)).catch(() => {});
+  return data;
+};
+
+export const removeFile = async (id: string) => {
+  await tx("readwrite", (s) => s.delete(id));
+  const path = await filePath(id);
+  if (path) supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+};
 
 export function useFileUrl(id?: string) {
   const [url, setUrl] = useState<string>();

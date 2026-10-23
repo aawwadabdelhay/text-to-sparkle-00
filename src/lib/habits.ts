@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 export interface Habit { id: string; name: string; color: string }
 /** key `YYYY-MM:habitId` -> day -> 1 (done) | 0 (missed) */
 export type Checkins = Record<string, Record<number, 0 | 1>>;
-interface HabitState { habits: Habit[]; checkins: Checkins }
+interface HabitState { habits: Habit[]; checkins: Checkins; updatedAt: number }
 
 const KEY = "ljt-habits-v1";
 export const PALETTE = ["primary", "secondary", "accent", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5"];
@@ -20,18 +20,28 @@ const normalize = (v: Partial<HabitState>): HabitState => {
     for (const [d, x] of Object.entries((days ?? {}) as Record<string, unknown>)) m[Number(d)] = x === true || x === 1 ? 1 : 0;
     checkins[k] = m;
   }
-  return { habits: Array.isArray(v.habits) ? v.habits : DEFAULTS, checkins };
+  return { habits: Array.isArray(v.habits) ? v.habits : DEFAULTS, checkins, updatedAt: typeof v.updatedAt === "number" ? v.updatedAt : 0 };
 };
 
-const initial: HabitState = { habits: DEFAULTS, checkins: {} };
+const initial: HabitState = { habits: DEFAULTS, checkins: {}, updatedAt: 0 };
 let state = initial; let loaded = false;
 const listeners = new Set<() => void>();
 function load() {
   if (loaded || typeof window === "undefined") return; loaded = true;
   try { const raw = localStorage.getItem(KEY); if (raw) state = normalize(JSON.parse(raw)); } catch {}
 }
-function set(fn: (s: HabitState) => HabitState) {
-  state = fn(state); localStorage.setItem(KEY, JSON.stringify(state)); listeners.forEach((l) => l());
+const persistListeners = new Set<() => void>();
+export const onHabitPersist = (cb: () => void) => { persistListeners.add(cb); return () => { persistListeners.delete(cb); }; };
+export const getHabitState = () => { load(); return state; };
+function set(fn: (s: HabitState) => HabitState, touch = true) {
+  state = fn(state);
+  if (touch) state = { ...state, updatedAt: Date.now() };
+  localStorage.setItem(KEY, JSON.stringify(state)); listeners.forEach((l) => l());
+  if (touch) persistListeners.forEach((l) => l());
+}
+/** Replaces local habit data with a copy pulled from the account (no re-push loop). */
+export function replaceHabitState(next: unknown) {
+  set(() => normalize(next as Partial<HabitState>), false);
 }
 export function useHabits() {
   return useSyncExternalStore((l) => { load(); listeners.add(l); l(); return () => listeners.delete(l); }, () => { load(); return state; }, () => initial);
