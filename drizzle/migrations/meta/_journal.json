@@ -8,6 +8,13 @@
       "when": 1792784269923,
       "tag": "0000_user_sync_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792784751247,
+      "tag": "0001_remove_test_users",
+      "breakpoints": true
     }
   ]
 }
