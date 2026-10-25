@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
+import { type Task, addDays, autoPlan, dayKey, rollOver } from "./schedule";
+export type { Task } from "./schedule";
 
 export type ItemType = "video" | "reading" | "quiz" | "assignment" | "note";
 export interface Material { id: string; title: string; url: string }
@@ -12,7 +14,7 @@ export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
 export interface LearningPath { id: string; title: string }
 export const nodePos = (s: Section, i: number) => ({ x: s.x ?? 40 + i * 270, y: s.y ?? 60 + (i % 2) * 170 });
-interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; updatedAt: number }
+interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; schedule: Task[]; updatedAt: number }
 
 const KEY = "ljt-state-v1";
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -20,6 +22,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const initialState: State = {
   updatedAt: 0,
+  schedule: [],
   studyDays: [],
   learningPaths: [{ id: "path-web", title: "Web development" }],
   maps: [{
@@ -44,6 +47,7 @@ const normalize = (value: Partial<State>): State => ({
     : initialState.maps,
   studyDays: Array.isArray(value.studyDays) ? value.studyDays : [],
   learningPaths: Array.isArray(value.learningPaths) ? value.learningPaths : [],
+  schedule: Array.isArray(value.schedule) ? value.schedule : [],
   updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
 });
 
@@ -111,7 +115,22 @@ export function oldestFirst<T extends { title: string }>(items: T[]): T[] {
   return down > up ? [...items].reverse() : items;
 }
 
+const findItem = (s: State, t: { mapId: string; sectionId: string; itemId: string }) =>
+  s.maps.find((m) => m.id === t.mapId)?.sections.find((x) => x.id === t.sectionId)?.items.find((i) => i.id === t.itemId);
+export const localToday = () => dayKey(new Date());
+
 export const actions = {
+  scheduleItem: (t: Omit<Task, "id">) => set((s) => ({ ...s, schedule: [...s.schedule, { ...t, id: uid() }] })),
+  unscheduleItem: (id: string) => set((s) => ({ ...s, schedule: s.schedule.filter((t) => t.id !== id) })),
+  updateTask: (id: string, patch: Partial<Task>) => set((s) => ({ ...s, schedule: s.schedule.map((t) => t.id === id ? { ...t, ...patch } : t) })),
+  moveTask: (id: string, date: string, priority = false) => set((s) => ({ ...s, schedule: s.schedule.map((t) => t.id === id ? { ...t, rescheduledFrom: t.rescheduledFrom ?? t.date, date, priority } : t) })),
+  moveToTomorrow: (id: string) => actions.moveTask(id, addDays(localToday(), 1), true),
+  rollOverOverdue: () => set((s) => ({ ...s, schedule: rollOver(s.schedule, localToday(), (t) => !!findItem(s, t)?.done) })),
+  autoPlan: (daily: number, from = localToday()) => set((s) => {
+    const cands = s.maps.flatMap((m) => m.sections.flatMap((sec) => sec.items.filter((i) => !i.done).map((i) => ({ mapId: m.id, sectionId: sec.id, itemId: i.id, minutes: i.minutes }))));
+    const existing = s.schedule.filter((t) => t.date >= from);
+    return { ...s, schedule: [...s.schedule, ...autoPlan(existing, cands, from, daily, uid)] };
+  }),
   moveMap: (id: string, dir: -1 | 1) => set((s) => ({ ...s, maps: shift(s.maps, id, dir, (a, b) => a.pathId === b.pathId) })),
   placeMap: (id: string, pathId?: string, beforeId?: string) => set((s) => {
     if (id === beforeId) return s;

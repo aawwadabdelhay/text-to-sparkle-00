@@ -51,6 +51,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link to="/" className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</Link>
           <nav className="flex gap-1 rounded-full bg-muted p-1">
             <Link to="/" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
+            <Link to="/planner" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Planner</Link>
             <Link to="/stats" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Stats</Link>
           </nav>
           <SignOutButton />

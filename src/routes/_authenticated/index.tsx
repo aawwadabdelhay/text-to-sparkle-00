@@ -15,6 +15,23 @@ import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { importFromUrl } from "@/lib/import.functions";
 import { HabitCircle } from "@/components/HabitCircle";
+import { TaskRow } from "@/components/TaskRow";
+import { localToday } from "@/lib/store";
+import { sortTasks } from "@/lib/schedule";
+
+function TodayTasks() {
+  const { maps, schedule } = useStore();
+  const today = localToday();
+  const tasks = sortTasks(schedule.filter((t) => t.date === today));
+  const overdue = schedule.filter((t) => t.date < today && !maps.find((m) => m.id === t.mapId)?.sections.find((s) => s.id === t.sectionId)?.items.find((i) => i.id === t.itemId)?.done);
+  return <section className="mb-10 rounded-2xl border bg-card p-5">
+    <div className="flex flex-wrap items-center gap-3"><div className="flex-1"><p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Tasks</p><h2 className="font-display text-2xl">Today's study</h2></div>
+      {overdue.length > 0 && <Button size="sm" variant="secondary" onClick={() => actions.rollOverOverdue()}>Move {overdue.length} unfinished to today</Button>}
+      <Link to="/planner" className="text-sm text-primary hover:underline">Open planner →</Link></div>
+    {tasks.length ? <ul className="mt-4 space-y-2">{tasks.map((t) => <TaskRow key={t.id} task={t} maps={maps} />)}</ul>
+      : <p className="mt-3 text-sm text-muted-foreground">Nothing planned for today. Use the planner to assign lessons to time slots.</p>}
+  </section>;
+}
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -235,6 +252,7 @@ function Index() {
         <JourneyMap onBack={() => setView("cards")} />
       ) : (
         <>
+          <TodayTasks />
           <section className="mb-10 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
             <HabitCircle />
             <div className="rounded-2xl border bg-card p-5">
