@@ -11,4 +11,5 @@
 - [x] Merge habit circle (wheel, check-ins, calendar) into home dashboard
 - [x] Sign up / sign in with email, Google and Lovable; password reset page
 - [x] Sync learning data, habits and uploaded files to the account (any device)
+- [x] Study planner: schedule lessons, today tasks, reschedule unfinished
 - [ ] User creates their real account and confirms their email (blocks on user)
