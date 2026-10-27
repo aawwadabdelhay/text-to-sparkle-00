@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Add account-only YouTube playlist URL extractor and verify access and extraction
+
 - [x] Add learning paths and compatible saved-data model
 - [x] Add home cards and course grouping
 - [x] Add expandable course sections and reordering
