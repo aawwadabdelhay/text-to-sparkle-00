@@ -1,7 +1,9 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { playlistAccess } from "@/lib/playlist.functions";
 
 function SignOutButton() {
   const router = useRouter();
@@ -43,16 +45,20 @@ export function Ring({ value, size = 64 }: { value: number; size?: number }) {
 }
 
 export function Shell({ children }: { children: ReactNode }) {
+  const access = useServerFn(playlistAccess);
+  const [playlistAllowed, setPlaylistAllowed] = useState(false);
+  useEffect(() => { let active = true; access().then((result) => { if (active) setPlaylistAllowed(result.allowed); }).catch(() => {}); return () => { active = false; }; }, [access]);
   const cls = "rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground";
   return (
     <div className="min-h-screen bg-background bg-app">
       <header className="sticky top-0 z-10 border-b bg-background/70 backdrop-blur">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link to="/" className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</Link>
-          <nav className="flex gap-1 rounded-full bg-muted p-1">
+          <nav className="flex flex-wrap gap-1 rounded-full bg-muted p-1">
             <Link to="/" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
             <Link to="/planner" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Planner</Link>
             <Link to="/stats" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Stats</Link>
+            {playlistAllowed && <Link to="/playlist" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Playlist URLs</Link>}
           </nav>
           <SignOutButton />
         </div>

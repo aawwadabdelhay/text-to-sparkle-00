@@ -14,3 +14,4 @@
 - Course tree plans use a standalone sibling route and the existing store actions, so lesson navigation and completion share saved progress with all other views.
 - Habit tracking lives in its own browser-local store (src/lib/habits.ts, separate localStorage key) so learning data stays untouched; habit state syncs with the learning data through the same cloud-sync flow.
 - Import from a link scrapes public syllabus pages server-side (src/lib/import.functions.ts via the Firecrawl connector) and maps results into the store with actions.importCourses.
+- Private playlist extraction lives in a standalone authenticated route; visibility and every extraction request use a server-validated immutable account-ID allowlist, not email or browser storage, so other accounts cannot invoke it. YouTube playlist entries are parsed in order with continuation requests and Firecrawl raw HTML fallback; incomplete retrieval must be labeled.
