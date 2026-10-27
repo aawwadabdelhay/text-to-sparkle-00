@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Add account-only YouTube playlist URL extractor and verify access and extraction
+
 - [x] Add learning paths and compatible saved-data model
 - [x] Add home cards and course grouping
 - [x] Add expandable course sections and reordering
@@ -12,4 +14,4 @@
 - [x] Sign up / sign in with email, Google and Lovable; password reset page
 - [x] Sync learning data, habits and uploaded files to the account (any device)
 - [x] Study planner: schedule lessons, today tasks, reschedule unfinished
-- [ ] User creates their real account and confirms their email (blocks on user)
+- [x] User creates their real account and confirms their email

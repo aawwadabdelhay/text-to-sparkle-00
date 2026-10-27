@@ -8,6 +8,8 @@ export const Route = createFileRoute("/reset-password")({
     meta: [
       { title: "Reset password — Learning Journey Tracker" },
       { name: "description", content: "Choose a new password for your Learning Journey account." },
+      { property: "og:title", content: "Reset password — Learning Journey Tracker" },
+      { property: "og:description", content: "Choose a new password for your Learning Journey account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
