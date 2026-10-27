@@ -49,7 +49,7 @@ export const extractPlaylist = createServerFn({ method: "POST" })
         try {
           const response = await fetch("https://www.youtube.com/youtubei/v1/browse?prettyPrint=false", {
             method: "POST", headers: { ...headers, "Content-Type": "application/json" },
-            body: JSON.stringify({ context: config.INNERTUBE_CONTEXT ?? { client: { clientName: "WEB", clientVersion: config.INNERTUBE_CLIENT_VERSION ?? "2.20261026.01.00", hl: "en", gl: "US" } }, continuation: token }),
+            body: JSON.stringify({ context: config["INNERTUBE_CONTEXT"] ?? { client: { clientName: "WEB", clientVersion: config["INNERTUBE_CLIENT_VERSION"] ?? "2.20261026.01.00", hl: "en", gl: "US" } }, continuation: token }),
             signal: AbortSignal.timeout(20000),
           });
           if (!response.ok) throw new Error(`YouTube page ${response.status}`);

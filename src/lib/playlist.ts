@@ -18,8 +18,8 @@ export function readPlaylistPage(data: Obj, playlistId: string) {
   const videos: PlaylistVideo[] = [];
   let continuation: string | undefined;
   let expected: number | undefined;
-  const title = data.metadata?.playlistMetadataRenderer?.title ?? data.header?.playlistHeaderRenderer?.title?.simpleText ?? "YouTube playlist";
-  const count = data.header?.playlistHeaderRenderer?.numVideosText?.runs?.map((r: Obj) => r.text).join("");
+  const title = data["metadata"]?.playlistMetadataRenderer?.title ?? data["header"]?.playlistHeaderRenderer?.title?.simpleText ?? "YouTube playlist";
+  const count = data["header"]?.playlistHeaderRenderer?.numVideosText?.runs?.map((r: Obj) => r["text"]).join("");
   if (count) expected = Number(count.replace(/[^0-9]/g, "")) || undefined;
   function visit(value: any) {
     if (!value || typeof value !== "object") return;
@@ -29,7 +29,7 @@ export function readPlaylistPage(data: Obj, playlistId: string) {
     const endpoint = modern?.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint;
     const id = legacy?.videoId ?? (endpoint?.playlistId === playlistId ? modern?.contentId : undefined);
     if (id && /^[A-Za-z0-9_-]{11}$/.test(id)) {
-      const name = legacy?.title?.runs?.map((r: Obj) => r.text).join("") ?? modern?.metadata?.lockupMetadataViewModel?.title?.content ?? "Unavailable video";
+      const name = legacy?.title?.runs?.map((r: Obj) => r["text"]).join("") ?? modern?.metadata?.lockupMetadataViewModel?.title?.content ?? "Unavailable video";
       videos.push({ id, title: name, url: `https://www.youtube.com/watch?v=${id}` });
       return;
     }
@@ -41,7 +41,7 @@ export function readPlaylistPage(data: Obj, playlistId: string) {
     Object.values(value).forEach(visit);
   }
   // Never collect recommended video entries outside playlist contents.
-  visit(data.contents ?? data.onResponseReceivedActions ?? data.onResponseReceivedEndpoints ?? data.continuationContents);
+  visit(data["contents"] ?? data["onResponseReceivedActions"] ?? data["onResponseReceivedEndpoints"] ?? data["continuationContents"]);
   return { title: String(title), videos, continuation, expected };
 }
 
