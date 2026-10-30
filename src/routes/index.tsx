@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const URL = "https://mylearning-journey.lovable.app/";
+const URL = "https://text-to-sparkle-00.lovable.app/";
 const TITLE = "Learning Journey — Organize your self-study from any course site";
 const DESC =
   "Import courses from YouTube, Udemy, Coursera and LinkedIn Learning, see them as a tree plan, schedule lessons with a Pomodoro planner, and win your day with 4DX goals and habits.";

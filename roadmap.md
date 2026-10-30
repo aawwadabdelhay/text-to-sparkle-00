@@ -18,4 +18,4 @@
 - [x] User creates their real account and confirms their email
 - [x] Planner time blocks, day zones, carry-over and Pomodoro focus (lead measure)
 - [x] 4DX: WIG = learning path, daily small goal (lessons or Pomodoros), streak, celebration, weekly won/lost, glowing tree tiles
-- [x] Rename Lovable link to mylearning-journey.lovable.app
+- [ ] Rename Lovable link (mylearning-journey taken — waiting for new name)
