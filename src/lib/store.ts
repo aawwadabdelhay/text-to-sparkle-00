@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { type Task, addDays, autoPlan, dayKey, rollOver } from "./schedule";
-export type { Task } from "./schedule";
+import { type DayZone, type FocusEntry, type PomoSettings, type Pomo, type Task, addDays, autoPlan, dayKey, rollOver, shiftDay, splitRemaining } from "./schedule";
+export type { Task, DayZone, FocusEntry, PomoSettings, Pomo } from "./schedule";
 
 export type ItemType = "video" | "reading" | "quiz" | "assignment" | "note";
 export interface Material { id: string; title: string; url: string }
@@ -14,7 +14,8 @@ export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
 export interface LearningPath { id: string; title: string }
 export const nodePos = (s: Section, i: number) => ({ x: s.x ?? 40 + i * 270, y: s.y ?? 60 + (i % 2) * 170 });
-interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; schedule: Task[]; updatedAt: number }
+interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; schedule: Task[]; dayZones: DayZone[]; focusLog: FocusEntry[]; pomodoro: PomoSettings; updatedAt: number }
+export const defaultPomo: PomoSettings = { focus: 25, break: 5, weeklyTarget: 20 };
 
 const KEY = "ljt-state-v1";
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -23,6 +24,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 const initialState: State = {
   updatedAt: 0,
   schedule: [],
+  dayZones: [],
+  focusLog: [],
+  pomodoro: defaultPomo,
   studyDays: [],
   learningPaths: [{ id: "path-web", title: "Web development" }],
   maps: [{
@@ -48,6 +52,9 @@ const normalize = (value: Partial<State>): State => ({
   studyDays: Array.isArray(value.studyDays) ? value.studyDays : [],
   learningPaths: Array.isArray(value.learningPaths) ? value.learningPaths : [],
   schedule: Array.isArray(value.schedule) ? value.schedule : [],
+  dayZones: Array.isArray(value.dayZones) ? value.dayZones : [],
+  focusLog: Array.isArray(value.focusLog) ? value.focusLog : [],
+  pomodoro: { ...defaultPomo, ...(value.pomodoro ?? {}) },
   updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
 });
 
