@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Plus, Quote, Trash2, Type } from "lucide-react";
+import { CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
 
@@ -168,14 +168,26 @@ function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste 
   const base = "w-full bg-transparent outline-none placeholder:text-muted-foreground/50";
   const cls = { h1: "font-display text-3xl py-1", h2: "font-display text-xl py-1", quote: "italic", text: "", todo: b.checked ? "line-through text-muted-foreground" : "", bullet: "", embed: "text-sm text-primary" }[b.type as string] ?? "";
   const ph = b.type === "embed" ? "Paste a YouTube or web link…" : b.type === "text" ? "Type “/” for commands…" : b.type.startsWith("h") ? "Heading" : "";
+  const [showLink, setShowLink] = useState(false);
   const own = useRef<HTMLTextAreaElement | null>(null);
   useLayoutEffect(() => { const el = own.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [b.text, b.type, b.font]);
+  useEffect(() => { if (showLink) own.current?.focus(); }, [showLink]);
   const sel = (e: React.SyntheticEvent<HTMLTextAreaElement>) => { const t = e.currentTarget; onSel(t.selectionStart !== t.selectionEnd); };
-  const input = <textarea rows={1} ref={(el) => { own.current = el; inputRef(el); }} onSelect={sel} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onPaste={onPaste} onFocus={onFocus} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} block resize-none overflow-hidden whitespace-pre-wrap break-words py-1 text-sm leading-relaxed`} />;
+  const input = <textarea rows={1} ref={(el) => { own.current = el; inputRef(el); }} onSelect={sel} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onPaste={onPaste} onFocus={onFocus} onBlur={b.type === "embed" ? () => setShowLink(false) : undefined} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} block resize-none overflow-hidden whitespace-pre-wrap break-words py-1 text-sm leading-relaxed`} />;
   if (b.type === "todo") return <label className="flex items-start gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 mt-2 accent-[var(--primary)]" />{input}</label>;
   if (b.type === "bullet") return <div className="flex items-start gap-2"><span className="py-1 text-primary">•</span>{input}</div>;
   if (b.type === "quote") return <div className="border-l-4 border-secondary pl-3">{input}</div>;
-  if (b.type === "embed") return <div>{input}<Embed url={b.text ?? ""} /></div>;
+  if (b.type === "embed") {
+    const url = b.text ?? "";
+    const linked = /^https?:\/\//.test(url);
+    if (linked && !showLink) return (
+      <div>
+        <Embed url={url} />
+        <button type="button" onClick={() => setShowLink(true)} className="mt-1 text-xs text-muted-foreground/50 hover:text-primary"><Pencil className="mr-1 inline size-3" />Change link</button>
+      </div>
+    );
+    return <div>{input}<Embed url={url} /></div>;
+  }
   return input;
 }
 
