@@ -1,6 +1,6 @@
 // Pure helpers for importing LinkedIn Learning course outlines (Firecrawl blocks linkedin.com).
-export type LiItem = { title: string; type?: string; minutes?: number; url?: string };
-export type LiCourse = { title: string; description?: string; sections: { title: string; items: LiItem[] }[] };
+export type LiItem = { title: string; type?: string; minutes?: number | undefined; url?: string | undefined };
+export type LiCourse = { title: string; description?: string | undefined; sections: { title: string; items: LiItem[] }[] };
 
 /** Unwraps learning-login/share links and strips tracking so we hit the public course page. */
 export function cleanLinkedinUrl(raw: string): string | null {
@@ -13,7 +13,7 @@ export function cleanLinkedinUrl(raw: string): string | null {
     try { u = new URL(r); } catch { return null; }
   }
   const m = u.pathname.match(/^\/learning\/([^/]+)/);
-  if (!m || ["browse", "topics", "paths", "me", "search"].includes(m[1])) return null;
+  if (!m || ["browse", "topics", "paths", "me", "search"].includes(m[1] ?? "")) return null;
   return `https://www.linkedin.com/learning/${m[1]}`;
 }
 
@@ -30,7 +30,7 @@ export function parseDuration(s: string): number | undefined {
 export function parseLinkedinCourse(html: string): LiCourse | null {
   let title = "", description: string | undefined;
   for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
-    try { const d = JSON.parse(m[1]); if (d["@type"] === "Course") { title = d.name; description = d.description; } } catch { /* skip */ }
+    try { const d = JSON.parse(m[1] ?? ""); if (d["@type"] === "Course") { title = d.name; description = d.description; } } catch { /* skip */ }
   }
   if (!title) title = decode(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
   const sections: LiCourse["sections"] = [];

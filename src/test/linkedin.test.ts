@@ -15,7 +15,7 @@ describe("linkedin import", () => {
   it.runIf(existsSync("/tmp/li.html"))("parses a real course page", () => {
     const c = parseLinkedinCourse(readFileSync("/tmp/li.html", "utf8"))!;
     expect(c.title).toBe("Learning Word Desktop (Microsoft 365)");
-    expect(c.sections[0].items[0].title).toBe("Get up and running quickly with Word");
+    expect(c.sections[0]?.items[0]?.title).toBe("Get up and running quickly with Word");
     console.log(JSON.stringify(c.sections.map((s) => [s.title, s.items.length])));
   });
 });
