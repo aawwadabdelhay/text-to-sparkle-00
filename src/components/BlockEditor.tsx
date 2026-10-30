@@ -139,7 +139,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
           <button type="button" disabled={bi === 0} onClick={() => moveBlock(bi, -1)} aria-label="Move up" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp className="size-3.5" /></button>
           <button type="button" disabled={bi === blocks.length - 1} onClick={() => moveBlock(bi, 1)} aria-label="Move down" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown className="size-3.5" /></button>
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 rounded-xl border bg-card px-3 py-2 shadow-sm">
           {tools === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
           {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
