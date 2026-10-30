@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { extractPlaylist, playlistAccess } from "@/lib/playlist.functions";
 
 export const Route = createFileRoute("/_authenticated/playlist")({
-  beforeLoad: async () => { if (!(await playlistAccess()).allowed) throw redirect({ to: "/" }); },
+  beforeLoad: async () => { if (!(await playlistAccess()).allowed) throw redirect({ to: "/dashboard" }); },
   head: () => ({ meta: [
     { title: "Private playlist URLs — Learning Journey" },
     { name: "description", content: "Private YouTube playlist video link extraction for Learning Journey." },
@@ -33,7 +33,7 @@ function PlaylistTool() {
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
   return <Shell>
-    <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft size={16} />Back to maps</Link>
+    <Link to="/dashboard" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft size={16} />Back to maps</Link>
     <div className="flex items-center gap-3"><ListVideo className="text-primary" size={32} /><h1 className="font-display text-3xl sm:text-4xl">Playlist URLs</h1></div>
     <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole size={14} />Private · Your account only</p>
     <form className="mt-8 flex max-w-4xl flex-wrap items-end gap-3" onSubmit={async (event) => {

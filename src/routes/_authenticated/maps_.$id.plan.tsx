@@ -33,7 +33,7 @@ function CoursePlanPage() {
   const [drag, setDrag] = useState<{ sid: string; iid: string } | null>(null);
   const [over, setOver] = useState<string | null>(null);
   const map = maps.find((entry) => entry.id === id);
-  if (!map) return <Shell><p>Course not found.</p><Link to="/" className="text-primary">All courses</Link></Shell>;
+  if (!map) return <Shell><p>Course not found.</p><Link to="/dashboard" className="text-primary">All courses</Link></Shell>;
   const summary = stats(mapItems(map));
 
   return <Shell>

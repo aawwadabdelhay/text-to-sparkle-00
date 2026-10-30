@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
-const safe = (r?: string) => (r && r.startsWith("/") && !r.startsWith("//") ? r : "/");
+const safe = (r?: string) => (r && r.startsWith("/") && !r.startsWith("//") ? r : "/dashboard");
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -48,7 +48,7 @@ function AuthPage() {
   const go = (target?: string) => navigate({ to: safe(target ?? search.redirect), replace: true });
 
   const oauth = async (provider: "google" | "apple") => {
-    if (search.redirect && search.redirect !== "/") sessionStorage.setItem("ljt-auth-redirect", safe(search.redirect));
+    if (search.redirect && search.redirect !== "/dashboard") sessionStorage.setItem("ljt-auth-redirect", safe(search.redirect));
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });

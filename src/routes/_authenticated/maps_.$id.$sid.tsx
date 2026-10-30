@@ -31,7 +31,7 @@ function SectionPage() {
   const [drag, setDrag] = useState<string | null>(null); const [over, setOver] = useState<string | null>(null);
   const m = maps.find((x) => x.id === id);
   const sec = m?.sections.find((x) => x.id === sid);
-  if (!m || !sec) return <Shell><p className="text-muted-foreground">Module not found. <Link to="/" className="text-primary underline">Back</Link></p></Shell>;
+  if (!m || !sec) return <Shell><p className="text-muted-foreground">Module not found. <Link to="/dashboard" className="text-primary underline">Back</Link></p></Shell>;
   const s = stats(sec.items), d = stats(mapItems(m)), all = stats(maps.flatMap(mapItems));
   const byType = (Object.keys(labels) as ItemType[]).map((t) => ({ t, ...stats(sec.items.filter((i) => i.type === t)) })).filter((x) => x.total);
 

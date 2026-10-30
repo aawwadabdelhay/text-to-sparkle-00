@@ -72,14 +72,14 @@ function MapPage() {
   const map = maps.find((entry) => entry.id === id);
   const [sectionTitle, setSectionTitle] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  if (!map) return <Shell><p className="text-muted-foreground">Course not found. <Link to="/" className="text-primary underline">Back</Link></p></Shell>;
+  if (!map) return <Shell><p className="text-muted-foreground">Course not found. <Link to="/dashboard" className="text-primary underline">Back</Link></p></Shell>;
   const summary = stats(mapItems(map));
   const allExpanded = map.sections.every((s) => collapsed[s.id]);
   const toggle = (sid: string) => setCollapsed((c) => ({ ...c, [sid]: !c[sid] }));
 
   return <Shell>
     <Button variant="outline" size="sm" asChild>
-      <Link to="/">All paths & courses</Link>
+      <Link to="/dashboard">All paths & courses</Link>
     </Button>
     <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-center"><Ring value={summary.pct} size={80} /><div className="flex-1"><div className="flex items-start gap-3"><h1 className="flex-1 font-display text-4xl">{map.title}</h1><Button size="icon" variant="ghost" aria-label="Edit course" onClick={() => { const title = prompt("Course title", map.title); if (title === null) return; const description = prompt("Description", map.description) ?? map.description; actions.updateMap(map.id, title.trim() || map.title, description); }}><Pencil /></Button></div>{map.description && <p className="mt-1 text-muted-foreground">{map.description}</p>}<p className="mt-2 text-sm text-muted-foreground">{summary.done}/{summary.total} items · {fmt(summary.leftMin)} remaining · {map.sections.length} sections</p></div></div>
 
