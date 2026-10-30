@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
-import { BlockEditor } from "@/components/BlockEditor";
+import { BlockEditor, LessonCtx } from "@/components/BlockEditor";
+import { startFocus } from "@/components/FocusTimer";
 import { type Block, type Item, actions, fmt, mapItems, stats, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/maps_/$id/$sid_/items/$iid")({
@@ -40,7 +41,9 @@ function ItemPage() {
     </div>
 
     <section className="mt-8"><div className="mb-3 flex items-center gap-2"><BookOpen className="text-primary" /><h2 className="font-display text-2xl">Lesson notebook</h2></div>
+      <LessonCtx.Provider value={{ done: !!item.done, onToggle: () => actions.toggleItem(id, sid, iid), onFocus: () => startFocus(iid, "Watch", item.title) }}>
       <BlockEditor blocks={item.blocks?.length ? item.blocks : legacyBlocks(item)} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
+      </LessonCtx.Provider>
     </section>
 
   </Shell>;

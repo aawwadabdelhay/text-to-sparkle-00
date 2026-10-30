@@ -1,7 +1,44 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
+
+export type LessonActions = { done: boolean; onToggle: () => void; onFocus: () => void };
+export const LessonCtx = createContext<LessonActions | null>(null);
+
+const PAID: { re: RegExp; name: string; tone: string }[] = [
+  { re: /linkedin\.com\/learning/i, name: "LinkedIn Learning", tone: "text-primary" },
+  { re: /coursera\.org/i, name: "Coursera", tone: "text-primary" },
+  { re: /udemy\.com/i, name: "Udemy", tone: "text-secondary" },
+  { re: /edx\.org/i, name: "edX", tone: "text-accent" },
+  { re: /pluralsight\.com/i, name: "Pluralsight", tone: "text-secondary" },
+  { re: /skillshare\.com/i, name: "Skillshare", tone: "text-accent" },
+];
+
+function openSideBySide(url: string) {
+  const w = Math.round(window.screen.availWidth / 2);
+  const h = window.screen.availHeight;
+  const win = window.open(url, "lecture-window", `popup=yes,width=${w},height=${h},left=${w},top=0`);
+  if (!win) window.open(url, "_blank", "noopener");
+}
+
+function LectureCard({ url, site }: { url: string; site: { name: string; tone: string } }) {
+  const lesson = useContext(LessonCtx);
+  let path = "";
+  try { const u = new URL(url); path = decodeURIComponent(u.pathname.split("/").filter(Boolean).slice(-1)[0] ?? "").replace(/[-_]+/g, " "); } catch { /* ignore */ }
+  return (
+    <div className="mt-2 rounded-xl border bg-card p-4">
+      <div className={`text-xs font-semibold uppercase tracking-wide ${site.tone}`}>{site.name}</div>
+      <div className="mt-1 font-display text-lg capitalize">{path || "Lecture"}</div>
+      <p className="mt-1 text-xs text-muted-foreground">This site doesn't allow playing inside other websites. Watch it in a window beside your notes — you stay signed in there.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={() => openSideBySide(url)} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"><ExternalLink className="size-4" />Watch lecture side by side</button>
+        {lesson && <button type="button" onClick={lesson.onFocus} className="rounded-md border px-3 py-1.5 text-sm hover:text-primary">Start Pomodoro</button>}
+        {lesson && <button type="button" onClick={lesson.onToggle} className="rounded-md border px-3 py-1.5 text-sm hover:text-primary">{lesson.done ? "Completed ✓" : "Mark lesson done"}</button>}
+      </div>
+    </div>
+  );
+}
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const OPTIONS: { type: BlockType; label: string; hint: string; icon: typeof Type }[] = [
@@ -14,7 +51,7 @@ const OPTIONS: { type: BlockType; label: string; hint: string; icon: typeof Type
   { type: "divider", label: "Divider", hint: "Separator line", icon: Minus },
   { type: "image", label: "Photo", hint: "Upload an image", icon: ImageIcon },
   { type: "file", label: "Document", hint: "Upload PDF, Word, any file", icon: Paperclip },
-  { type: "embed", label: "Video / link", hint: "YouTube or any URL", icon: Link2 },
+  { type: "embed", label: "Video / link", hint: "YouTube, Udemy, Coursera, LinkedIn…", icon: Link2 },
 ];
 const TEXTY: BlockType[] = ["text", "h1", "h2", "todo", "bullet", "quote", "embed"];
 
@@ -145,6 +182,8 @@ function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste 
 function Embed({ url }: { url: string }) {
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
   if (yt) return <iframe className="mt-2 aspect-video w-full rounded-lg border" src={`https://www.youtube.com/embed/${yt[1]}`} allowFullScreen title="Video" />;
+  const paid = PAID.find((p) => p.re.test(url));
+  if (paid && /^https?:\/\//.test(url)) return <LectureCard url={url} site={paid} />;
   if (/^https?:\/\//.test(url)) return <a href={url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">Open link <ExternalLink className="size-3" /></a>;
   return null;
 }
