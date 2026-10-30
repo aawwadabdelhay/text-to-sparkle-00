@@ -10,9 +10,9 @@ export function notebookDocument(b: Block): JSONContent {
   if (b.italic) marks.push({ type: "italic" });
   if (b.underline) marks.push({ type: "underline" });
   const attrs: Record<string, string> = {};
-  if (b.font) attrs.fontFamily = notebookFonts[b.font] ?? notebookFonts.sans ?? "sans-serif";
-  if (b.fontSize) attrs.fontSize = `${b.fontSize}px`;
-  if (b.color) attrs.color = `var(--${b.color})`;
+  if (b.font) attrs["fontFamily"] = notebookFonts[b.font] ?? notebookFonts["sans"] ?? "sans-serif";
+  if (b.fontSize) attrs["fontSize"] = `${b.fontSize}px`;
+  if (b.color) attrs["color"] = `var(--${b.color})`;
   if (Object.keys(attrs).length) marks.push({ type: "textStyle", attrs });
   return { type: "doc", content: (b.text ?? "").split("\n").map(text => ({ type: "paragraph", attrs: { textAlign: b.align ?? null }, content: text ? [{ type: "text", text, marks }] : [] })) };
 }
