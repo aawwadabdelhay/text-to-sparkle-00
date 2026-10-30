@@ -125,6 +125,11 @@ export function oldestFirst<T extends { title: string }>(items: T[]): T[] {
 const findItem = (s: State, t: { mapId: string; sectionId: string; itemId: string }) =>
   s.maps.find((m) => m.id === t.mapId)?.sections.find((x) => x.id === t.sectionId)?.items.find((i) => i.id === t.itemId);
 export const localToday = () => dayKey(new Date());
+/** A task is done when its lesson is done, or (for review tasks) when all its pomodoros are done. */
+export function taskDone(maps: StudyMap[], t: Task) {
+  if (t.kind === "review") return !!t.pomodoros?.length && t.pomodoros.every((p) => p.done >= p.planned);
+  return !!maps.find((m) => m.id === t.mapId)?.sections.find((x) => x.id === t.sectionId)?.items.find((i) => i.id === t.itemId)?.done;
+}
 
 export const actions = {
   scheduleItem: (t: Omit<Task, "id">) => set((s) => ({ ...s, schedule: [...s.schedule, { ...t, id: uid() }] })),
@@ -132,12 +137,43 @@ export const actions = {
   updateTask: (id: string, patch: Partial<Task>) => set((s) => ({ ...s, schedule: s.schedule.map((t) => t.id === id ? { ...t, ...patch } : t) })),
   moveTask: (id: string, date: string, priority = false) => set((s) => ({ ...s, schedule: s.schedule.map((t) => t.id === id ? { ...t, rescheduledFrom: t.rescheduledFrom ?? t.date, date, priority } : t) })),
   moveToTomorrow: (id: string) => actions.moveTask(id, addDays(localToday(), 1), true),
-  rollOverOverdue: () => set((s) => ({ ...s, schedule: rollOver(s.schedule, localToday(), (t) => !!findItem(s, t)?.done) })),
+  rollOverOverdue: () => set((s) => ({ ...s, schedule: rollOver(s.schedule, localToday(), (t) => taskDone(s.maps, t)) })),
   autoPlan: (daily: number, from = localToday()) => set((s) => {
     const cands = s.maps.flatMap((m) => m.sections.flatMap((sec) => sec.items.filter((i) => !i.done).map((i) => ({ mapId: m.id, sectionId: sec.id, itemId: i.id, minutes: i.minutes }))));
     const existing = s.schedule.filter((t) => t.date >= from);
-    return { ...s, schedule: [...s.schedule, ...autoPlan(existing, cands, from, daily, uid)] };
+    return { ...s, schedule: [...s.schedule, ...autoPlan(existing, cands, from, daily, uid, 60, s.dayZones)] };
   }),
+  /** Moves only the unfinished pomodoros of a task to another day. */
+  moveRemaining: (id: string, date: string) => set((s) => {
+    const t = s.schedule.find((x) => x.id === id); if (!t) return s;
+    if (!t.pomodoros?.length) return { ...s, schedule: s.schedule.map((x) => x.id === id ? { ...x, rescheduledFrom: x.rescheduledFrom ?? x.date, date, start: undefined, priority: true } : x) };
+    const { kept, rest } = splitRemaining(t, date, s.pomodoro.focus, uid);
+    return { ...s, schedule: [...s.schedule.map((x) => (x.id === id ? kept : x)), ...(rest ? [rest] : [])] };
+  }),
+  skipDay: (date: string) => set((s) => ({ ...s, schedule: shiftDay(s.schedule, date, (t) => taskDone(s.maps, t)) })),
+  setPomodoros: (id: string, pomodoros: Pomo[]) => set((s) => ({ ...s, schedule: s.schedule.map((t) => t.id === id ? { ...t, pomodoros } : t) })),
+  addReview: (taskId: string, date: string, count = 1) => set((s) => {
+    const t = s.schedule.find((x) => x.id === taskId); if (!t) return s;
+    const r: Task = { id: uid(), mapId: t.mapId, sectionId: t.sectionId, itemId: t.itemId, date, minutes: count * s.pomodoro.focus, kind: "review", pomodoros: [{ label: "Review", planned: count, done: 0 }] };
+    return { ...s, schedule: [...s.schedule, r] };
+  }),
+  logFocus: (taskId: string, label: string, minutes: number) => set((s) => {
+    const t = s.schedule.find((x) => x.id === taskId);
+    const entry: FocusEntry = { id: uid(), taskId, itemId: t?.itemId ?? "", date: localToday(), minutes, label };
+    const schedule = s.schedule.map((x) => {
+      if (x.id !== taskId) return x;
+      const p = [...(x.pomodoros ?? [])];
+      const i = p.findIndex((y) => y.label === label && y.done < y.planned);
+      const j = i >= 0 ? i : p.findIndex((y) => y.label === label);
+      if (j >= 0) p[j] = { ...p[j]!, done: p[j]!.done + 1 }; else p.push({ label, planned: 1, done: 1 });
+      return { ...x, pomodoros: p };
+    });
+    return { ...s, schedule, focusLog: [...s.focusLog, entry] };
+  }),
+  setPomoSettings: (patch: Partial<PomoSettings>) => set((s) => ({ ...s, pomodoro: { ...s.pomodoro, ...patch } })),
+  addZone: (z: Omit<DayZone, "id">) => set((s) => ({ ...s, dayZones: [...s.dayZones, { ...z, id: uid() }] })),
+  updateZone: (id: string, patch: Partial<DayZone>) => set((s) => ({ ...s, dayZones: s.dayZones.map((z) => z.id === id ? { ...z, ...patch } : z) })),
+  removeZone: (id: string) => set((s) => ({ ...s, dayZones: s.dayZones.filter((z) => z.id !== id) })),
   moveMap: (id: string, dir: -1 | 1) => set((s) => ({ ...s, maps: shift(s.maps, id, dir, (a, b) => a.pathId === b.pathId) })),
   placeMap: (id: string, pathId?: string, beforeId?: string) => set((s) => {
     if (id === beforeId) return s;
