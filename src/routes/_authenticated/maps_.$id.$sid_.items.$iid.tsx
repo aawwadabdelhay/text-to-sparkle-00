@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2 } from "lucide-react";
 import { Shell, Progress } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { BlockEditor, LessonCtx } from "@/components/BlockEditor";
@@ -30,7 +30,9 @@ function ItemPage() {
   const courseStats = stats(mapItems(map));
 
   return <Shell>
-    <Link to="/maps/$id/$sid" params={{ id, sid }} className="text-sm text-muted-foreground hover:text-foreground">← {section.title}</Link>
+    <Button variant="outline" size="sm" asChild>
+      <Link to="/maps/$id/$sid" params={{ id, sid }}><ArrowLeft /> {section.title}</Link>
+    </Button>
     <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
       <div className="flex-1"><p className="text-xs uppercase tracking-[0.2em] text-secondary">{item.type} · {fmt(item.minutes)}</p><h1 className="mt-2 font-display text-4xl">{item.title}</h1></div>
       <Button variant={item.done ? "secondary" : "default"} onClick={() => actions.toggleItem(id, sid, iid)}><CheckCircle2 />{item.done ? "Completed" : "Mark complete"}</Button>
