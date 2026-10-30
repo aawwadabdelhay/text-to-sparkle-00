@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowDown01, ArrowDown10, ArrowUpDown, BookOpen, ClipboardCheck, GripVertical, HelpCircle, StickyNote, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { ArrowDown01, ArrowDown10, ArrowLeft, ArrowUpDown, BookOpen, ClipboardCheck, GripVertical, HelpCircle, StickyNote, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +37,9 @@ function SectionPage() {
 
   return (
     <Shell>
-      <Link to="/maps/$id" params={{ id }} className="text-sm text-muted-foreground hover:text-foreground">← {m.title}</Link>
+      <Button variant="outline" size="sm" asChild>
+        <Link to="/maps/$id" params={{ id }}><ArrowLeft /> {m.title}</Link>
+      </Button>
       <div className="mt-3 flex items-center gap-3">
         <h1 className="flex-1 font-display text-4xl">{sec.title}</h1>
         <Button size="icon" variant="ghost" aria-label="Rename" onClick={() => { const t = prompt("Module title", sec.title); if (t?.trim()) actions.renameSection(id, sid, t.trim()); }}><Pencil /></Button>

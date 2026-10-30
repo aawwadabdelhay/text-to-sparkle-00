@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { actions, fmt, localToday, mapItems, stats, useStore, type ItemType } from "@/lib/store";
 import { dayKey } from "@/lib/schedule";
@@ -36,7 +37,9 @@ function CoursePlanPage() {
   const summary = stats(mapItems(map));
 
   return <Shell>
-    <Link to="/maps/$id" params={{ id }} className="text-sm text-muted-foreground hover:text-foreground">← Course sections</Link>
+    <Button variant="outline" size="sm" asChild>
+      <Link to="/maps/$id" params={{ id }}><ArrowLeft /> Course sections</Link>
+    </Button>
     <div className="mt-5 flex items-start gap-4 sm:items-center">
       <Ring value={summary.pct} size={72} />
       <div className="min-w-0 flex-1">
