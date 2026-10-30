@@ -129,8 +129,8 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
 
   return <div className="rounded-xl border bg-card p-4 sm:p-6">
     <input ref={fileInput} type="file" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
-    <div className="space-y-1">
-      {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
+    <div className="space-y-2">
+      {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded-xl ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
         onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(b.id); }}
         onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m!); onChange(next); } setDragId(null); setOverId(null); }}>
         <div className="mt-1 flex flex-col items-center opacity-40 group-hover:opacity-100">
@@ -139,7 +139,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
           <button type="button" disabled={bi === 0} onClick={() => moveBlock(bi, -1)} aria-label="Move up" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp className="size-3.5" /></button>
           <button type="button" disabled={bi === blocks.length - 1} onClick={() => moveBlock(bi, 1)} aria-label="Move down" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown className="size-3.5" /></button>
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 rounded-xl border bg-card px-3 py-2 shadow-sm">
           {tools === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
           {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
@@ -211,7 +211,7 @@ export function Embed({ url }: { url: string }) {
 
 function MediaRow({ b }: { b: Block }) {
   const url = useFileUrl(b.fileId);
-  if (b.type === "divider") return <hr className="my-3 border-border" />;
+  if (b.type === "divider") return <hr className="border-border" />;
   const dl = url && <a href={url} download={b.fileName} className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:text-primary"><Download className="size-3" />Download</a>;
   if (b.type === "image") return <figure className="my-2 flex flex-col items-center">
     {url ? <img src={url} alt={b.fileName} className="mx-auto max-h-[480px] rounded-lg border object-contain" /> : <div className="h-32 animate-pulse rounded-lg bg-muted" />}
