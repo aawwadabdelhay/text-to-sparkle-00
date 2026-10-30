@@ -176,7 +176,17 @@ function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste 
   if (b.type === "todo") return <label className="flex items-start gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 mt-2 accent-[var(--primary)]" />{input}</label>;
   if (b.type === "bullet") return <div className="flex items-start gap-2"><span className="py-1 text-primary">•</span>{input}</div>;
   if (b.type === "quote") return <div className="border-l-4 border-secondary pl-3">{input}</div>;
-  if (b.type === "embed") return <div>{input}<Embed url={b.text ?? ""} /></div>;
+  if (b.type === "embed") {
+    const url = b.text ?? "";
+    const linked = /^https?:\/\//.test(url);
+    if (linked && !showLink) return (
+      <div>
+        <Embed url={url} />
+        <button type="button" onClick={() => setShowLink(true)} className="mt-1 text-xs text-muted-foreground/50 hover:text-primary"><Pencil className="mr-1 inline size-3" />Change link</button>
+      </div>
+    );
+    return <div>{input}<Embed url={url} /></div>;
+  }
   return input;
 }
 
