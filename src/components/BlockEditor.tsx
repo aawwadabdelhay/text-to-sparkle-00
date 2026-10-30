@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, CheckSquare, ChevronDown, ChevronUp, GripVertical, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
 
@@ -89,7 +89,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   const update = (id: string, patch: Partial<Block>) => onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
-  const moveBlock = (i: number, d: number) => { const j = i + d; if (j < 0 || j >= blocks.length) return; const next = [...blocks]; [next[i], next[j]] = [next[j], next[i]]; onChange(next); };
+  const moveBlock = (i: number, d: number) => { const j = i + d; if (j < 0 || j >= blocks.length) return; const next = [...blocks]; const [m] = next.splice(i, 1); next.splice(j, 0, m!); onChange(next); };
   const insertAfter = (id: string | null, block: Block) => {
     const i = id ? blocks.findIndex((b) => b.id === id) : blocks.length - 1;
     const next = [...blocks]; next.splice(i + 1, 0, block); onChange(next); return block.id;
@@ -132,7 +132,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     <div className="space-y-1">
       {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
         onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(b.id); }}
-        onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m); onChange(next); } setDragId(null); setOverId(null); }}>
+        onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m!); onChange(next); } setDragId(null); setOverId(null); }}>
         <div className="mt-1 flex flex-col items-center opacity-40 group-hover:opacity-100">
           <button type="button" draggable onDragStart={(e) => { setDragId(b.id); e.dataTransfer.effectAllowed = "move"; }} onDragEnd={() => { setDragId(null); setOverId(null); }}
             aria-label="Drag to reorder" title="Drag to move" className="cursor-grab rounded p-1 text-muted-foreground hover:text-foreground active:cursor-grabbing"><GripVertical className="size-4" /></button>
