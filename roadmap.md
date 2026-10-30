@@ -16,4 +16,4 @@
 - [x] Study planner: schedule lessons, today tasks, reschedule unfinished
 - [x] User creates their real account and confirms their email
 - [x] Planner time blocks, day zones, carry-over and Pomodoro focus (lead measure)
-- [ ] Reform whole site for 4DX: tree plan defines the WIG, everything as small daily goals for momentum (needs a plan with the user)
+- [x] 4DX: WIG = learning path, daily small goal (lessons or Pomodoros), streak, celebration, weekly won/lost, glowing tree tiles

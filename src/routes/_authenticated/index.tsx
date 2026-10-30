@@ -1,3 +1,4 @@
+import { WigBoard } from "@/components/WigBoard";
 import { FocusScoreboard } from "@/components/FocusScoreboard";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -25,7 +26,7 @@ function TodayTasks() {
   const today = localToday();
   const tasks = sortTasks(schedule.filter((t) => t.date === today));
   const overdue = schedule.filter((t) => t.date < today && !maps.find((m) => m.id === t.mapId)?.sections.find((s) => s.id === t.sectionId)?.items.find((i) => i.id === t.itemId)?.done);
-  return <section className="mb-10 space-y-4"><FocusScoreboard /><div className="rounded-2xl border bg-card p-5">
+  return <section className="mb-10 space-y-4"><WigBoard /><FocusScoreboard /><div className="rounded-2xl border bg-card p-5">
     <div className="flex flex-wrap items-center gap-3"><div className="flex-1"><p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Tasks</p><h2 className="font-display text-2xl">Today's study</h2></div>
       {overdue.length > 0 && <Button size="sm" variant="secondary" onClick={() => actions.rollOverOverdue()}>Move {overdue.length} unfinished to today</Button>}
       <Link to="/planner" className="text-sm text-primary hover:underline">Open planner →</Link></div>

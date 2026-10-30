@@ -3,7 +3,8 @@ import { useState } from "react";
 import { BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Checkbox } from "@/components/ui/checkbox";
-import { actions, fmt, mapItems, stats, useStore, type ItemType } from "@/lib/store";
+import { actions, fmt, localToday, mapItems, stats, useStore, type ItemType } from "@/lib/store";
+import { dayKey } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/maps_/$id/plan")({
   head: () => ({ meta: [
@@ -27,7 +28,7 @@ const types: Record<ItemType, { icon: typeof PlayCircle; label: string; color: s
 
 function CoursePlanPage() {
   const { id } = Route.useParams();
-  const { maps } = useStore();
+  const { maps, wig } = useStore();
   const [drag, setDrag] = useState<{ sid: string; iid: string } | null>(null);
   const [over, setOver] = useState<string | null>(null);
   const map = maps.find((entry) => entry.id === id);
@@ -39,7 +40,7 @@ function CoursePlanPage() {
     <div className="mt-5 flex items-start gap-4 sm:items-center">
       <Ring value={summary.pct} size={72} />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Course tree plan</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Course tree plan{wig && map.pathId === wig.pathId && <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-accent">WIG · {wig.title}</span>}</p>
         <h1 className="mt-1 break-words font-display text-3xl sm:text-4xl">{map.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{summary.done}/{summary.total} complete · {fmt(summary.leftMin)} remaining</p>
       </div>
@@ -83,7 +84,7 @@ function CoursePlanPage() {
                     onDragEnd={() => { setDrag(null); setOver(null); }}
                     onDragOver={(e) => { if (drag?.sid === section.id) { e.preventDefault(); setOver(item.id); } }}
                     onDrop={(e) => { e.preventDefault(); if (drag && drag.sid === section.id && drag.iid !== item.id) actions.reorderItem(id, section.id, drag.iid, item.id); setDrag(null); setOver(null); }}
-                    className={`flex min-w-0 cursor-grab flex-col rounded-md border transition active:cursor-grabbing ${item.done ? "border-primary/50 bg-primary/15" : detail.color} ${drag?.iid === item.id ? "opacity-40" : ""} ${over === item.id && drag?.iid !== item.id ? "ring-2 ring-accent" : ""}`}>
+                    className={`flex min-w-0 cursor-grab flex-col rounded-md border transition active:cursor-grabbing ${item.done ? (item.doneAt && dayKey(new Date(item.doneAt)) === localToday() ? "border-accent bg-accent/15 glow-accent" : "border-primary/60 bg-primary/15 glow-primary") : detail.color} ${drag?.iid === item.id ? "opacity-40" : ""} ${over === item.id && drag?.iid !== item.id ? "ring-2 ring-accent" : ""}`}>
                     <Link draggable={false} to="/maps/$id/$sid/items/$iid" params={{ id, sid: section.id, iid: item.id }} title={item.title} className="flex min-h-20 flex-1 flex-col gap-2 p-2.5 transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase"><Icon size={13} />{detail.label}</span>
                       <span className={`break-words text-xs leading-5 ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}>{item.title}</span>
