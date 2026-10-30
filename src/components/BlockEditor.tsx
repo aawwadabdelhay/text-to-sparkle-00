@@ -129,8 +129,8 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
 
   return <div className="rounded-xl border bg-card p-4 sm:p-6">
     <input ref={fileInput} type="file" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
-    <div className="space-y-1">
-      {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
+    <div className="space-y-2">
+      {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded-xl ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
         onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(b.id); }}
         onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m!); onChange(next); } setDragId(null); setOverId(null); }}>
         <div className="mt-1 flex flex-col items-center opacity-40 group-hover:opacity-100">
