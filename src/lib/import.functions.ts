@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const itemSchema = z.object({ title: z.string(), type: z.string().optional(), minutes: z.number().optional() });
+const itemSchema = z.object({ title: z.string(), type: z.string().optional(), minutes: z.number().optional(), url: z.string().optional() });
 const courseSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
@@ -40,6 +40,7 @@ const jsonSchema = {
                       title: { type: "string" },
                       type: { type: "string", enum: ["video", "reading", "quiz", "assignment", "note"] },
                       minutes: { type: "number" },
+                      url: { type: "string", description: "Absolute URL of this individual lecture/lesson page or video, if linked on the page" },
                     },
                     required: ["title"],
                   },
@@ -72,7 +73,7 @@ export const importFromUrl = createServerFn({ method: "POST" })
         formats: [{
           type: "json",
           schema: jsonSchema,
-          prompt: "Extract the full public syllabus/curriculum of this online course or learning path: every course, every section/module/week, and every lecture/lesson inside it with its type (video, reading, quiz, assignment) and duration in minutes when shown. For a single course return exactly ONE entry in courses whose sections are its modules/weeks/chapters; only use several courses for a multi-course learning path. Keep the original order. Do not invent lessons.",
+          prompt: "Extract the full public syllabus/curriculum of this online course or learning path: every course, every section/module/week, and every lecture/lesson inside it with its type (video, reading, quiz, assignment) and duration in minutes when shown. For a single course return exactly ONE entry in courses whose sections are its modules/weeks/chapters; only use several courses for a multi-course learning path. Include each lecture's own absolute link (url) when the page links to it. Keep the original order. Do not invent lessons or links.",
         }],
       }),
     });
@@ -85,5 +86,10 @@ export const importFromUrl = createServerFn({ method: "POST" })
     const json = (await res.json()) as { data?: { json?: unknown }; json?: unknown };
     const parsed = importResultSchema.safeParse(json.data?.json ?? json.json);
     if (!parsed.success || !parsed.data.courses.length) return { error: "No lessons were found on that page. It may require a login." };
+    const base = new URL(data.url);
+    for (const c of parsed.data.courses) for (const sec of c.sections) for (const it of sec.items) {
+      if (!it.url) continue;
+      try { const u = new URL(it.url, base); it.url = /^https?:$/.test(u.protocol) ? u.href : undefined; } catch { it.url = undefined; }
+    }
     return { result: parsed.data };
   });
