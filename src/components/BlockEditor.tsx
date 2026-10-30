@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { AlignCenter, AlignJustify, AlignLeft, AlignRight, CheckSquare, ChevronDown, ChevronUp, GripVertical, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
+import { NotebookText } from "./NotebookText";
 
 export type LessonActions = { done: boolean; onToggle: () => void; onFocus: () => void };
 export const LessonCtx = createContext<LessonActions | null>(null);
@@ -60,7 +61,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   const [menu, setMenu] = useState<{ id: string; q: string } | null>(null);
   const [tools, setTools] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
-  const refs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const refs = useRef<Record<string, HTMLTextAreaElement | HTMLDivElement | null>>({});
   const fileInput = useRef<HTMLInputElement>(null);
   const uploadTarget = useRef<{ id: string; type: BlockType } | null>(null);
 
@@ -89,7 +90,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   const update = (id: string, patch: Partial<Block>) => onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
-  const moveBlock = (i: number, d: number) => { const j = i + d; if (j < 0 || j >= blocks.length) return; const next = [...blocks]; const [m] = next.splice(i, 1); next.splice(j, 0, m!); onChange(next); };
+  const moveBlock = (i: number, d: number) => { const j = i + d; if (j < 0 || j >= blocks.length) return; const next = [...blocks]; const [m] = next.splice(i, 1); if (!m) return; next.splice(j, 0, m); onChange(next); };
   const insertAfter = (id: string | null, block: Block) => {
     const i = id ? blocks.findIndex((b) => b.id === id) : blocks.length - 1;
     const next = [...blocks]; next.splice(i + 1, 0, block); onChange(next); return block.id;
@@ -110,7 +111,7 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
       const i = next.findIndex((b) => b.id === id); next.splice(i + 1, 0, { id: nid, type: "text", text: "" });
       onChange(next); setFocusId(nid); return;
     }
-    update(id, { type, text: "" }); setFocusId(id);
+    update(id, { type, text: "", richText: undefined }); setFocusId(id);
   };
 
   const onFile = async (f: File | undefined) => {
@@ -132,16 +133,23 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     <div className="space-y-2">
       {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded-xl ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
         onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(b.id); }}
-        onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m!); onChange(next); } setDragId(null); setOverId(null); }}>
+        onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); if (from < 0) return; const next = [...blocks]; const [m] = next.splice(from, 1); if (m) { next.splice(bi, 0, m); onChange(next); } } setDragId(null); setOverId(null); }}>
         <div className="mt-1 flex flex-col items-center opacity-40 group-hover:opacity-100">
           <button type="button" draggable onDragStart={(e) => { setDragId(b.id); e.dataTransfer.effectAllowed = "move"; }} onDragEnd={() => { setDragId(null); setOverId(null); }}
             aria-label="Drag to reorder" title="Drag to move" className="cursor-grab rounded p-1 text-muted-foreground hover:text-foreground active:cursor-grabbing"><GripVertical className="size-4" /></button>
           <button type="button" disabled={bi === 0} onClick={() => moveBlock(bi, -1)} aria-label="Move up" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp className="size-3.5" /></button>
           <button type="button" disabled={bi === blocks.length - 1} onClick={() => moveBlock(bi, 1)} aria-label="Move down" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown className="size-3.5" /></button>
         </div>
-        <div className="min-w-0 flex-1 rounded-xl border bg-card px-3 py-2 shadow-sm">
-          {tools === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
-          {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
+        <div className={`min-w-0 flex-1 ${b.type === "divider" || b.type === "embed" ? "py-2" : "rounded-xl border bg-card px-3 py-2 shadow-sm"}`}>
+          {TEXTY.includes(b.type) && b.type !== "embed" ? <div className={`flex items-start gap-2 ${b.type === "quote" ? "border-l-4 border-secondary pl-3" : ""}`}>
+            {b.type === "todo" && <input type="checkbox" aria-label="Complete to-do" checked={!!b.checked} onChange={() => update(b.id, { checked: !b.checked })} className="mt-2 size-4" />}
+            {b.type === "bullet" && <span className="py-1 text-primary">•</span>}
+            <NotebookText b={b} inputRef={el => { refs.current[b.id] = el; }} showTools={tools === b.id} onSelection={has => setTools(has ? b.id : null)} set={patch => { update(b.id, patch); if (patch.text !== undefined) setMenu(patch.text.startsWith("/") ? { id: b.id, q: patch.text.slice(1) } : null); }} onKey={e => {
+              if (menu?.id === b.id) { if (e.key === "Enter") { e.preventDefault(); const first = filtered[0]; if (first) pick(b.id, first.type); } if (e.key === "Escape") setMenu(null); return; }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); setFocusId(insertAfter(b.id, { id: uid(), type: b.type === "todo" || b.type === "bullet" ? b.type : "text", text: "" })); }
+              if (e.key === "Backspace" && !b.text) { if (b.type !== "text") { e.preventDefault(); update(b.id, { type: "text" }); } else if (blocks.length > 1) { e.preventDefault(); remove(b.id); } }
+            }} />
+          </div> : TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
             onText={(text) => { update(b.id, { text }); setMenu(text.startsWith("/") ? { id: b.id, q: text.slice(1) } : null); }}
             onCheck={() => update(b.id, { checked: !b.checked })}
             onPaste={(e) => paste(e, b)}
