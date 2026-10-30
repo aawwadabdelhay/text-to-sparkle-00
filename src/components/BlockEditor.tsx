@@ -189,7 +189,7 @@ function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste 
   return input;
 }
 
-function Embed({ url }: { url: string }) {
+export function Embed({ url }: { url: string }) {
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
   if (yt) return <iframe className="mt-2 aspect-video w-full rounded-lg border" src={`https://www.youtube.com/embed/${yt[1]}`} allowFullScreen title="Video" />;
   const paid = PAID.find((p) => p.re.test(url));

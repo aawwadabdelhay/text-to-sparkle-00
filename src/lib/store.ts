@@ -6,7 +6,7 @@ export type { Task, DayZone, FocusEntry, PomoSettings, Pomo } from "./schedule";
 export type ItemType = "video" | "reading" | "quiz" | "assignment" | "note";
 export interface Material { id: string; title: string; url: string }
 export interface QuizQuestion { id: string; question: string; answer: string }
-export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined; materials?: Material[]; quizzes?: QuizQuestion[]; notes?: string; blocks?: Block[] }
+export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined; materials?: Material[]; quizzes?: QuizQuestion[]; notes?: string; blocks?: Block[]; url?: string | undefined }
 export type BlockType = "text" | "h1" | "h2" | "todo" | "bullet" | "quote" | "divider" | "image" | "file" | "embed";
 export interface Block { id: string; type: BlockType; text?: string; checked?: boolean; fileId?: string; fileName?: string; mime?: string; size?: number; bold?: boolean; italic?: boolean; underline?: boolean; color?: string; font?: string; fontSize?: string | undefined; align?: "left" | "center" | "right" | "justify" | undefined; dir?: "ltr" | "rtl" | "auto" | undefined }
 export interface Section { id: string; title: string; items: Item[]; x?: number; y?: number }
@@ -199,7 +199,7 @@ export const actions = {
   setBlocks: (mid: string, sid: string, iid: string, blocks: Block[]) => set(onItem(mid, sid, iid, (i) => ({ ...i, blocks }))),
   setNotes: (mid: string, sid: string, iid: string, notes: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, notes }))),
   addMap: (title: string, description = "") => { const id = uid(); set((s) => ({ ...s, maps: [...s.maps, { id, title, description, sections: [], createdAt: new Date().toISOString() }] })); return id; },
-  importCourses: (data: { kind: "course" | "path"; title: string; courses: { title: string; description?: string | undefined; sections: { title: string; items: { title: string; type?: string | undefined; minutes?: number | undefined }[] }[] }[] }) => set((s) => {
+  importCourses: (data: { kind: "course" | "path"; title: string; courses: { title: string; description?: string | undefined; sections: { title: string; items: { title: string; type?: string | undefined; minutes?: number | undefined; url?: string | undefined }[] }[] }[] }) => set((s) => {
     const types: ItemType[] = ["video", "reading", "quiz", "assignment", "note"];
     const isPath = data.kind === "path" && data.courses.length > 1 && data.courses.some((c) => c.sections.length > 1);
     const pathId = isPath ? uid() : undefined;
@@ -210,7 +210,7 @@ export const actions = {
     const maps: StudyMap[] = courses.map((c) => ({
       id: uid(), title: c.title, description: c.description ?? "", createdAt: new Date().toISOString(), ...(pathId ? { pathId } : {}),
       sections: c.sections.map((sec) => ({ id: uid(), title: sec.title, items: oldestFirst(sec.items).map((it) => ({
-        id: uid(), title: it.title, done: false, type: types.includes(it.type as ItemType) ? (it.type as ItemType) : "video", minutes: Math.max(0, Math.round(it.minutes ?? 0)),
+        id: uid(), title: it.title, done: false, type: types.includes(it.type as ItemType) ? (it.type as ItemType) : "video", minutes: Math.max(0, Math.round(it.minutes ?? 0)), ...(it.url ? { url: it.url } : {}),
       })) })),
     }));
     return { ...s, maps: [...s.maps, ...maps], learningPaths: pathId ? [...s.learningPaths, { id: pathId, title: data.title }] : s.learningPaths };
@@ -251,6 +251,7 @@ export const actions = {
   restoreItem: (mid: string, sid: string, item: Item, index: number) => set(onSection(mid, sid, (s) => { if (s.items.some((i) => i.id === item.id)) return s; const items = [...s.items]; items.splice(Math.min(index, items.length), 0, item); return { ...s, items }; })),
   restoreSection: (mid: string, section: Section, index: number) => set(onMap(mid, (m) => { if (m.sections.some((x) => x.id === section.id)) return m; const sections = [...m.sections]; sections.splice(Math.min(index, sections.length), 0, section); return { ...m, sections }; })),
   reorderItem: (mid: string, sid: string, sourceId: string, targetId: string) => set(onSection(mid, sid, (s) => ({ ...s, items: reorder(s.items, sourceId, targetId) }))),
+  setItemUrl: (mid: string, sid: string, iid: string, url: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, url: url.trim() || undefined }))),
   addMaterial: (mid: string, sid: string, iid: string, title: string, url: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, materials: [...(i.materials ?? []), { id: uid(), title, url }] }))),
   deleteMaterial: (mid: string, sid: string, iid: string, materialId: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, materials: (i.materials ?? []).filter((x) => x.id !== materialId) }))),
   addQuiz: (mid: string, sid: string, iid: string, question: string, answer: string) => set(onItem(mid, sid, iid, (i) => ({ ...i, quizzes: [...(i.quizzes ?? []), { id: uid(), question, answer }] }))),
