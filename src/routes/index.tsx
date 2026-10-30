@@ -61,7 +61,7 @@ function Welcome() {
     <div className="min-h-screen bg-background bg-app text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <span className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</span>
-        <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
+        <Link to="/auth" search={{ redirect: undefined }} className="text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
       </header>
 
       <main className="mx-auto max-w-6xl px-6">
@@ -73,7 +73,7 @@ function Welcome() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             Bring courses from YouTube, Udemy, Coursera and LinkedIn Learning together, plan your week, focus with Pomodoro and hit a small goal every day.
           </p>
-          <Link to="/auth" className="mt-10 inline-block rounded-xl bg-primary px-8 py-3 text-base font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90">
+          <Link to="/auth" search={{ redirect: undefined }} className="mt-10 inline-block rounded-xl bg-primary px-8 py-3 text-base font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90">
             Start free
           </Link>
         </section>
@@ -91,7 +91,7 @@ function Welcome() {
         <section className="mb-20 rounded-2xl border bg-card p-10 text-center">
           <h2 className="font-display text-3xl">Start your learning journey today</h2>
           <p className="mt-3 text-muted-foreground">Free to use. Your progress syncs across your devices.</p>
-          <Link to="/auth" className="mt-6 inline-block rounded-xl bg-primary px-8 py-3 font-semibold text-primary-foreground hover:bg-primary/90">
+          <Link to="/auth" search={{ redirect: undefined }} className="mt-6 inline-block rounded-xl bg-primary px-8 py-3 font-semibold text-primary-foreground hover:bg-primary/90">
             Start free
           </Link>
         </section>
