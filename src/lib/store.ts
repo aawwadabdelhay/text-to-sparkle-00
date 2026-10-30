@@ -71,12 +71,37 @@ function load() {
 const persistListeners = new Set<() => void>();
 export const onPersist = (cb: () => void) => { persistListeners.add(cb); return () => { persistListeners.delete(cb); }; };
 export const getState = () => { load(); return state; };
-function set(fn: (s: State) => State, touch = true) {
+// Ctrl+Z history: snapshots of earlier states; rapid edits (typing) merge into one step.
+const past: State[] = [];
+let future: State[] = [];
+let lastPush = 0;
+function set(fn: (s: State) => State, touch = true, record = true) {
+  const prev = state;
   state = fn(state);
+  if (touch && record && state !== prev) {
+    const now = Date.now();
+    if (now - lastPush > 800) { past.push(prev); if (past.length > 100) past.shift(); }
+    lastPush = now;
+    future = [];
+  }
   if (touch) state = { ...state, updatedAt: Date.now() };
   localStorage.setItem(KEY, JSON.stringify(state));
   listeners.forEach((l) => l());
   if (touch) persistListeners.forEach((l) => l());
+}
+export function undo() {
+  const prev = past.pop();
+  if (!prev) return false;
+  future.push(state); lastPush = 0;
+  set(() => prev, true, false);
+  return true;
+}
+export function redo() {
+  const next = future.pop();
+  if (!next) return false;
+  past.push(state); lastPush = 0;
+  set(() => next, true, false);
+  return true;
 }
 /** Replaces local data with a copy pulled from the account (no re-push loop). */
 export function replaceState(next: unknown) {
