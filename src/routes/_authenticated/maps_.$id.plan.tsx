@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
+import { BookOpen, Check, ClipboardCheck, HelpCircle, PlayCircle, StickyNote } from "lucide-react";
 import { Shell, Progress, Ring } from "@/components/Shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,7 +38,7 @@ function CoursePlanPage() {
 
   return <Shell>
     <Button variant="outline" size="sm" asChild>
-      <Link to="/maps/$id" params={{ id }}><ArrowLeft /> Course sections</Link>
+      <Link to="/maps/$id" params={{ id }}>Course sections</Link>
     </Button>
     <div className="mt-5 flex items-start gap-4 sm:items-center">
       <Ring value={summary.pct} size={72} />
