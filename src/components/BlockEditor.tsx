@@ -74,25 +74,15 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     const parsed = htmlToBlocks(html);
     if (!parsed.length) return;
     const empty = !b.text && (b.type === "text" || b.type === "h1" || b.type === "h2" || b.type === "quote" || b.type === "bullet" || b.type === "todo");
-    const i = blocks.findIndex((x) => x.id === b.id);
-    if (!empty || parsed.length === 1) {
-      // Paste into the current block at the cursor, keeping it one block.
-      const el = e.currentTarget as HTMLTextAreaElement;
-      const plain = parsed.map((x) => x.text ?? "").filter(Boolean).join("\n");
-      const cur = b.text ?? "";
-      const a = el.selectionStart ?? cur.length, z = el.selectionEnd ?? cur.length;
-      const src = parsed[0];
-      const fmt = empty && parsed.length === 1 && src ? { type: src.type === "text" ? b.type : src.type, bold: src.bold, italic: src.italic, underline: src.underline, font: src.font, color: src.color } : {};
-      update(b.id, { ...fmt, text: cur.slice(0, a) + plain + cur.slice(z) } as Partial<Block>);
-      requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = a + plain.length; });
-      return;
-    }
-    // Empty line + several paragraphs: they replace this line, in place.
-    const next: Block[] = [...blocks];
-    next.splice(i, 1, ...parsed);
-    onChange(next);
-    const last = parsed[parsed.length - 1];
-    if (last) setFocusId(last.id);
+    // Paste into the current block at the cursor, keeping it one block.
+    const el = e.currentTarget as HTMLTextAreaElement;
+    const plain = parsed.map((x) => (x.type === "bullet" ? "• " : x.type === "todo" ? "☐ " : "") + (x.text ?? "")).filter((t) => t.trim()).join("\n\n");
+    const cur = b.text ?? "";
+    const a = el.selectionStart ?? cur.length, z = el.selectionEnd ?? cur.length;
+    const src = parsed[0];
+    const fmt = empty && parsed.length === 1 && src ? { type: src.type === "text" ? b.type : src.type, bold: src.bold, italic: src.italic, underline: src.underline, font: src.font, color: src.color } : {};
+    update(b.id, { ...fmt, text: cur.slice(0, a) + plain + cur.slice(z) } as Partial<Block>);
+    requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = a + plain.length; });
   };
 
 
