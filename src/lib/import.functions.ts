@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { cleanLinkedinUrl, parseLinkedinCourse } from "./linkedin";
 
 const itemSchema = z.object({ title: z.string(), type: z.string().optional(), minutes: z.number().optional(), url: z.string().optional() });
 const courseSchema = z.object({
@@ -60,6 +61,20 @@ const jsonSchema = {
 export const importFromUrl = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ url: z.string().url().max(2000) }).parse(d))
   .handler(async ({ data }): Promise<{ result?: ImportResult; error?: string }> => {
+    if (/(^|\.)linkedin\.com$/.test(new URL(data.url).hostname)) {
+      const clean = cleanLinkedinUrl(data.url);
+      if (!clean) return { error: "That LinkedIn link isn't a course page. Open the course and copy its link." };
+      try {
+        const r = await fetch(clean, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36", "Accept-Language": "en-US,en;q=0.9" } });
+        if (!r.ok) { console.error(`LinkedIn fetch failed [${r.status}]`); return { error: "LinkedIn didn't share that course page. Try again in a minute." }; }
+        const course = parseLinkedinCourse(await r.text());
+        if (!course) return { error: "No lessons were found on that LinkedIn page." };
+        return { result: { kind: "course", title: course.title, courses: [course] } };
+      } catch (e) {
+        console.error("LinkedIn import error", e);
+        return { error: "Couldn't reach LinkedIn. Try again." };
+      }
+    }
     const lovable = process.env["LOVABLE_API_KEY"];
     const fc = process.env["FIRECRAWL_API_KEY"];
     if (!lovable || !fc) return { error: "Importer is not configured." };
