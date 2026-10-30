@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { actions, getState, useStore } from "@/lib/store";
 
 // Timer runs from timestamps so it survives reloads; kept in its own browser key.
-interface TimerState { taskId: string; label: string; phase: "focus" | "break"; endsAt: number; pausedLeft?: number; title: string }
+interface TimerState { taskId: string; label: string; phase: "focus" | "break"; endsAt: number; pausedLeft?: number | undefined; title: string }
 const KEY = "ljt-focus-timer";
 let cur: TimerState | null = null;
 let loaded = false;

@@ -1,6 +1,6 @@
 // Pure planner helpers (kept separate so they're easy to test).
 export interface Pomo { label: string; planned: number; done: number }
-export interface Task { id: string; mapId: string; sectionId: string; itemId: string; date: string; start?: string; minutes: number; priority?: boolean; rescheduledFrom?: string; pomodoros?: Pomo[]; kind?: "lesson" | "review" }
+export interface Task { id: string; mapId: string; sectionId: string; itemId: string; date: string; start?: string | undefined; minutes: number; priority?: boolean; rescheduledFrom?: string; pomodoros?: Pomo[]; kind?: "lesson" | "review" }
 export type ZoneKind = "study" | "work" | "other";
 export interface DayZone { id: string; name: string; color: "primary" | "secondary" | "accent" | "muted"; kind: ZoneKind; start: string; end: string; weekdays: number[] }
 export interface FocusEntry { id: string; taskId: string; itemId: string; date: string; minutes: number; label: string }
