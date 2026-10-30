@@ -8,7 +8,7 @@ export interface Material { id: string; title: string; url: string }
 export interface QuizQuestion { id: string; question: string; answer: string }
 export interface Item { id: string; title: string; type: ItemType; minutes: number; done: boolean; doneAt?: string | undefined; materials?: Material[]; quizzes?: QuizQuestion[]; notes?: string; blocks?: Block[] }
 export type BlockType = "text" | "h1" | "h2" | "todo" | "bullet" | "quote" | "divider" | "image" | "file" | "embed";
-export interface Block { id: string; type: BlockType; text?: string; checked?: boolean; fileId?: string; fileName?: string; mime?: string; size?: number; bold?: boolean; italic?: boolean; underline?: boolean; color?: string; font?: string; fontSize?: string; align?: "left" | "center" | "right" | "justify"; dir?: "ltr" | "rtl" | "auto" }
+export interface Block { id: string; type: BlockType; text?: string; checked?: boolean; fileId?: string; fileName?: string; mime?: string; size?: number; bold?: boolean; italic?: boolean; underline?: boolean; color?: string; font?: string; fontSize?: string | undefined; align?: "left" | "center" | "right" | "justify" | undefined; dir?: "ltr" | "rtl" | "auto" | undefined }
 export interface Section { id: string; title: string; items: Item[]; x?: number; y?: number }
 export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
