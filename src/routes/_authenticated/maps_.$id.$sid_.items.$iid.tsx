@@ -41,7 +41,7 @@ function ItemPage() {
     </div>
 
     <section className="mt-8"><div className="mb-3 flex items-center gap-2"><BookOpen className="text-primary" /><h2 className="font-display text-2xl">Lesson notebook</h2></div>
-      <LessonCtx.Provider value={{ done: !!item.done, onToggle: () => actions.toggleItem(id, sid, iid), onFocus: () => startFocus(iid, map.title, item.title) }}>
+      <LessonCtx.Provider value={{ done: !!item.done, onToggle: () => actions.toggleItem(id, sid, iid), onFocus: () => startFocus(iid, "Watch", item.title) }}>
       <BlockEditor blocks={item.blocks?.length ? item.blocks : legacyBlocks(item)} onChange={(b) => actions.setBlocks(id, sid, iid, b)} />
       </LessonCtx.Provider>
     </section>
