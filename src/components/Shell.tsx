@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { playlistAccess } from "@/lib/playlist.functions";
+import { FocusTimer } from "@/components/FocusTimer";
 
 function SignOutButton() {
   const router = useRouter();
@@ -64,6 +65,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-[1600px] px-5 py-10 sm:px-8">{children}</main>
+      <FocusTimer />
     </div>
   );
 }
