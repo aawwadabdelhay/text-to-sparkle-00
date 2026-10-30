@@ -170,10 +170,10 @@ function TextRow({ b, inputRef, onText, onKey, onCheck, onFocus, onSel, onPaste 
   const ph = b.type === "embed" ? "Paste a YouTube or web link…" : b.type === "text" ? "Type “/” for commands…" : b.type.startsWith("h") ? "Heading" : "";
   const [showLink, setShowLink] = useState(false);
   const own = useRef<HTMLTextAreaElement | null>(null);
-  useLayoutEffect(() => { const el = own.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [b.text, b.type, b.font]);
+  useLayoutEffect(() => { const el = own.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [b.text, b.type, b.font, b.fontSize]);
   useEffect(() => { if (showLink) own.current?.focus(); }, [showLink]);
   const sel = (e: React.SyntheticEvent<HTMLTextAreaElement>) => { const t = e.currentTarget; onSel(t.selectionStart !== t.selectionEnd); };
-  const input = <textarea rows={1} ref={(el) => { own.current = el; inputRef(el); }} onSelect={sel} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onPaste={onPaste} onFocus={onFocus} onBlur={b.type === "embed" ? () => setShowLink(false) : undefined} placeholder={ph} style={{ color: b.color ? `var(--${b.color})` : undefined }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} block resize-none overflow-hidden whitespace-pre-wrap break-words py-1 text-sm leading-relaxed`} />;
+  const input = <textarea rows={1} ref={(el) => { own.current = el; inputRef(el); }} onSelect={sel} value={b.text ?? ""} onChange={(e) => onText(e.target.value)} onKeyDown={onKey} onPaste={onPaste} onFocus={onFocus} onBlur={b.type === "embed" ? () => setShowLink(false) : undefined} placeholder={ph} dir={b.dir ?? "auto"} style={{ color: b.color ? `var(--${b.color})` : undefined, fontFamily: FAMILY[b.font ?? ""], fontSize: b.fontSize ? `${b.fontSize}px` : undefined, textAlign: b.align ?? "start" }} className={`${base} ${cls} ${FONTS[b.font ?? "sans"] ?? ""} ${b.bold ? "font-bold" : ""} ${b.italic ? "italic" : ""} ${b.underline ? "underline" : ""} block resize-none overflow-hidden whitespace-pre-wrap break-words py-1 text-sm leading-relaxed`} />;
   if (b.type === "todo") return <label className="flex items-start gap-2"><input type="checkbox" checked={!!b.checked} onChange={onCheck} className="size-4 mt-2 accent-[var(--primary)]" />{input}</label>;
   if (b.type === "bullet") return <div className="flex items-start gap-2"><span className="py-1 text-primary">•</span>{input}</div>;
   if (b.type === "quote") return <div className="border-l-4 border-secondary pl-3">{input}</div>;
@@ -221,6 +221,9 @@ function MediaRow({ b }: { b: Block }) {
 }
 
 const FONTS: Record<string, string> = { sans: "font-sans", serif: "font-display", mono: "font-mono" };
+const FAMILY: Record<string, string> = { inter: "Inter, sans-serif", lora: "Lora, serif", playfair: "'Playfair Display', serif", caveat: "Caveat, cursive", cairo: "Cairo, sans-serif", tajawal: "Tajawal, sans-serif", amiri: "Amiri, serif", naskh: "'Noto Naskh Arabic', serif" };
+const FONT_OPTS: [string, string][] = [["sans", "Manrope"], ["serif", "Fraunces"], ["mono", "Mono"], ["inter", "Inter"], ["lora", "Lora"], ["playfair", "Playfair"], ["caveat", "Handwriting"], ["cairo", "Cairo (عربي)"], ["tajawal", "Tajawal (عربي)"], ["amiri", "Amiri (عربي)"], ["naskh", "Naskh (عربي)"]];
+const SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40"];
 const COLORS = ["foreground", "primary", "secondary", "accent", "destructive", "muted-foreground"];
 function Toolbar({ b, set }: { b: Block; set: (p: Partial<Block>) => void }) {
   const btn = (on: boolean | undefined) => `rounded px-2 py-0.5 text-xs ${on ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`;
@@ -229,8 +232,17 @@ function Toolbar({ b, set }: { b: Block; set: (p: Partial<Block>) => void }) {
     <button type="button" className={`${btn(b.italic)} italic`} onClick={() => set({ italic: !b.italic })} aria-label="Italic">I</button>
     <button type="button" className={`${btn(b.underline)} underline`} onClick={() => set({ underline: !b.underline })} aria-label="Underline">U</button>
     <select value={b.font ?? "sans"} onChange={(e) => set({ font: e.target.value })} className="rounded bg-transparent px-1 text-xs outline-none" aria-label="Font">
-      <option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option>
+      {FONT_OPTS.map(([v, l]) => <option key={v} value={v} className="bg-popover">{l}</option>)}
     </select>
+    <select value={b.fontSize ?? ""} onChange={(e) => set({ fontSize: e.target.value || undefined })} className="rounded bg-transparent px-1 text-xs outline-none" aria-label="Font size">
+      <option value="" className="bg-popover">Size</option>
+      {SIZES.map((z) => <option key={z} value={z} className="bg-popover">{z}</option>)}
+    </select>
+    <span className="mx-1 h-4 w-px bg-border" />
+    {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight], ["justify", AlignJustify]] as const).map(([a, Icon]) => <button key={a} type="button" className={btn(b.align === a)} onClick={() => set({ align: b.align === a ? undefined : a })} aria-label={`Align ${a}`}><Icon className="size-3.5" /></button>)}
+    <span className="mx-1 h-4 w-px bg-border" />
+    <button type="button" className={btn(b.dir === "ltr")} onClick={() => set({ dir: b.dir === "ltr" ? undefined : "ltr" })} aria-label="Left to right">LTR</button>
+    <button type="button" className={btn(b.dir === "rtl")} onClick={() => set({ dir: b.dir === "rtl" ? undefined : "rtl" })} aria-label="Right to left">RTL</button>
     <span className="mx-1 h-4 w-px bg-border" />
     {COLORS.map((c) => <button key={c} type="button" onClick={() => set({ color: c === "foreground" ? "" : c })} aria-label={`Color ${c}`} className={`size-4 rounded-full border ${(b.color || "foreground") === c ? "ring-2 ring-ring" : ""}`} style={{ background: `var(--${c})` }} />)}
   </div>;
