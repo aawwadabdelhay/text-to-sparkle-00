@@ -73,15 +73,23 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     e.preventDefault();
     const parsed = htmlToBlocks(html);
     if (!parsed.length) return;
-    const empty = b.type === "text" && !b.text;
-    let next: Block[];
-    if (empty) {
-      next = [...parsed, ...blocks.filter((x) => x.id !== b.id)];
-    } else {
-      const i = blocks.findIndex((x) => x.id === b.id);
-      next = [...blocks];
-      next.splice(i + 1, 0, ...parsed);
+    const empty = !b.text && (b.type === "text" || b.type === "h1" || b.type === "h2" || b.type === "quote" || b.type === "bullet" || b.type === "todo");
+    const i = blocks.findIndex((x) => x.id === b.id);
+    if (!empty || parsed.length === 1) {
+      // Paste into the current block at the cursor, keeping it one block.
+      const el = e.currentTarget as HTMLTextAreaElement;
+      const plain = parsed.map((x) => x.text ?? "").filter(Boolean).join("\n");
+      const cur = b.text ?? "";
+      const a = el.selectionStart ?? cur.length, z = el.selectionEnd ?? cur.length;
+      const src = parsed[0];
+      const fmt = empty && parsed.length === 1 && src ? { type: src.type === "text" ? b.type : src.type, bold: src.bold, italic: src.italic, underline: src.underline, font: src.font, color: src.color } : {};
+      update(b.id, { ...fmt, text: cur.slice(0, a) + plain + cur.slice(z) } as Partial<Block>);
+      requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = a + plain.length; });
+      return;
     }
+    // Empty line + several paragraphs: they replace this line, in place.
+    const next: Block[] = [...blocks];
+    next.splice(i, 1, ...parsed);
     onChange(next);
     const last = parsed[parsed.length - 1];
     if (last) setFocusId(last.id);
@@ -204,9 +212,9 @@ function MediaRow({ b }: { b: Block }) {
   const url = useFileUrl(b.fileId);
   if (b.type === "divider") return <hr className="my-3 border-border" />;
   const dl = url && <a href={url} download={b.fileName} className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:text-primary"><Download className="size-3" />Download</a>;
-  if (b.type === "image") return <figure className="my-2">
-    {url ? <img src={url} alt={b.fileName} className="max-h-[480px] rounded-lg border object-contain" /> : <div className="h-32 animate-pulse rounded-lg bg-muted" />}
-    <figcaption className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">{b.fileName}{dl}</figcaption>
+  if (b.type === "image") return <figure className="my-2 flex flex-col items-center">
+    {url ? <img src={url} alt={b.fileName} className="mx-auto max-h-[480px] rounded-lg border object-contain" /> : <div className="h-32 animate-pulse rounded-lg bg-muted" />}
+    <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-muted-foreground">{b.fileName}{dl}</figcaption>
   </figure>;
   const isPdf = b.mime === "application/pdf";
   return <div className="my-2 rounded-lg border bg-background/40 p-3">
