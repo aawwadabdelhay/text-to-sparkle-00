@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
 import { Route as AuthenticatedPlaylistRouteImport } from './routes/_authenticated/playlist'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
@@ -35,9 +35,9 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
@@ -78,9 +78,10 @@ const AuthenticatedMapsIdSidItemsIidRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/playlist': typeof AuthenticatedPlaylistRoute
   '/stats': typeof AuthenticatedStatsRoute
@@ -90,12 +91,13 @@ export interface FileRoutesByFullPath {
   '/maps/$id/$sid/items/$iid': typeof AuthenticatedMapsIdSidItemsIidRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/playlist': typeof AuthenticatedPlaylistRoute
   '/stats': typeof AuthenticatedStatsRoute
-  '/': typeof AuthenticatedIndexRoute
   '/maps/$id': typeof AuthenticatedMapsIdRoute
   '/maps/$id/$sid': typeof AuthenticatedMapsIdSidRoute
   '/maps/$id/plan': typeof AuthenticatedMapsIdPlanRoute
@@ -106,10 +108,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/playlist': typeof AuthenticatedPlaylistRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/maps/$id': typeof AuthenticatedMapsIdRoute
   '/_authenticated/maps_/$id/$sid': typeof AuthenticatedMapsIdSidRoute
   '/_authenticated/maps_/$id/plan': typeof AuthenticatedMapsIdPlanRoute
@@ -121,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/dashboard'
     | '/planner'
     | '/playlist'
     | '/stats'
@@ -130,12 +133,13 @@ export interface FileRouteTypes {
     | '/maps/$id/$sid/items/$iid'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/reset-password'
+    | '/dashboard'
     | '/planner'
     | '/playlist'
     | '/stats'
-    | '/'
     | '/maps/$id'
     | '/maps/$id/$sid'
     | '/maps/$id/plan'
@@ -145,10 +149,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/dashboard'
     | '/_authenticated/planner'
     | '/_authenticated/playlist'
     | '/_authenticated/stats'
-    | '/_authenticated/'
     | '/_authenticated/maps/$id'
     | '/_authenticated/maps_/$id/$sid'
     | '/_authenticated/maps_/$id/plan'
@@ -184,11 +188,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/planner': {
@@ -244,10 +248,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedPlaylistRoute: typeof AuthenticatedPlaylistRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedMapsIdRoute: typeof AuthenticatedMapsIdRoute
   AuthenticatedMapsIdSidRoute: typeof AuthenticatedMapsIdSidRoute
   AuthenticatedMapsIdPlanRoute: typeof AuthenticatedMapsIdPlanRoute
@@ -255,10 +259,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedPlaylistRoute: AuthenticatedPlaylistRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedMapsIdRoute: AuthenticatedMapsIdRoute,
   AuthenticatedMapsIdSidRoute: AuthenticatedMapsIdSidRoute,
   AuthenticatedMapsIdPlanRoute: AuthenticatedMapsIdPlanRoute,
