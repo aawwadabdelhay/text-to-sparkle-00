@@ -75,10 +75,10 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
     if (!parsed.length) return;
     const empty = !b.text && (b.type === "text" || b.type === "h1" || b.type === "h2" || b.type === "quote" || b.type === "bullet" || b.type === "todo");
     const i = blocks.findIndex((x) => x.id === b.id);
-    if (!empty || parsed.length === 1) {
+    if (true) {
       // Paste into the current block at the cursor, keeping it one block.
       const el = e.currentTarget as HTMLTextAreaElement;
-      const plain = parsed.map((x) => x.text ?? "").filter(Boolean).join("\n");
+      const plain = parsed.map((x) => (x.type === "bullet" ? "• " : x.type === "todo" ? "☐ " : "") + (x.text ?? "")).filter((t) => t.trim()).join("\n\n");
       const cur = b.text ?? "";
       const a = el.selectionStart ?? cur.length, z = el.selectionEnd ?? cur.length;
       const src = parsed[0];
