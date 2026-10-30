@@ -47,3 +47,19 @@ describe("time blocks & pomodoro", () => {
     expect(focusMinutes([{ id: "1", taskId: "a", itemId: "a", date: "2026-10-25", minutes: 25, label: "Watch" }, { id: "2", taskId: "a", itemId: "a", date: "2026-10-20", minutes: 25, label: "Watch" }], "2026-10-21", "2026-10-25")).toBe(25);
   });
 });
+
+import { dayWon, streak, weekWins } from "@/lib/goals";
+describe("daily small goal", () => {
+  it("is won when all planned lessons are done, even with no pomodoros", () => expect(dayWon({ planned: 2, plannedDone: 2, pomos: 0, dailyPomos: 4 })).toBe(true));
+  it("is won when the pomodoro target is reached first", () => expect(dayWon({ planned: 3, plannedDone: 1, pomos: 4, dailyPomos: 4 })).toBe(true));
+  it("is not won with partial lessons and too few pomodoros", () => expect(dayWon({ planned: 3, plannedDone: 2, pomos: 3, dailyPomos: 4 })).toBe(false));
+  it("is not won on an empty day with no pomodoros", () => expect(dayWon({ planned: 0, plannedDone: 0, pomos: 0, dailyPomos: 4 })).toBe(false));
+  it("streak counts from yesterday when today isn't won yet", () => {
+    const wonDays = new Set(["2026-10-27", "2026-10-28", "2026-10-29"]);
+    expect(streak("2026-10-30", (d) => wonDays.has(d))).toBe(3);
+  });
+  it("counts winning days in the Monday-start week", () => {
+    const wonDays = new Set(["2026-10-25", "2026-10-26", "2026-10-28"]); // Sun (prev week), Mon, Wed
+    expect(weekWins("2026-10-30", (d) => wonDays.has(d))).toBe(2);
+  });
+});
