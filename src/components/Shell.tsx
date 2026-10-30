@@ -55,9 +55,9 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background bg-app">
       <header className="sticky top-0 z-10 border-b bg-background/70 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link to="/" className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</Link>
+          <Link to="/dashboard" className="font-display text-xl tracking-tight">Learning<span className="text-primary">·</span>Journey</Link>
           <nav className="flex flex-wrap gap-1 rounded-full bg-muted p-1">
-            <Link to="/" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
+            <Link to="/dashboard" className={cls} activeOptions={{ exact: true }} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Maps</Link>
             <Link to="/planner" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Planner</Link>
             <Link to="/stats" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Stats</Link>
             {playlistAllowed && <Link to="/playlist" className={cls} activeProps={{ className: "bg-card text-foreground shadow-sm" }}>Playlist URLs</Link>}

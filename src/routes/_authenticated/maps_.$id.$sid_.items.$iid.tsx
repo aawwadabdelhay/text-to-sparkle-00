@@ -27,7 +27,7 @@ function ItemPage() {
   const section = map?.sections.find((entry) => entry.id === sid);
   const item = section?.items.find((entry) => entry.id === iid);
 
-  if (!map || !section || !item) return <Shell><p className="text-muted-foreground">Learning item not found. <Link to="/" className="text-primary underline">Back home</Link></p></Shell>;
+  if (!map || !section || !item) return <Shell><p className="text-muted-foreground">Learning item not found. <Link to="/dashboard" className="text-primary underline">Back home</Link></p></Shell>;
   const moduleStats = stats(section.items);
   const courseStats = stats(mapItems(map));
 

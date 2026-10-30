@@ -35,7 +35,7 @@ function TodayTasks() {
   </div></section>;
 }
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Learning Journey Tracker — Paths & courses" },
