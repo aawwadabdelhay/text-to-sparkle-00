@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Remove extra divider and lecture frames; add and verify persistent selected-word notebook formatting.
 
 - [x] Add account-only YouTube playlist URL extractor and verify access and extraction
 
