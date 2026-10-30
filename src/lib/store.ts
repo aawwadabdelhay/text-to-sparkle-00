@@ -14,7 +14,8 @@ export interface Link { from: string; to: string }
 export interface StudyMap { id: string; title: string; description: string; sections: Section[]; createdAt: string; links?: Link[]; pathId?: string }
 export interface LearningPath { id: string; title: string }
 export const nodePos = (s: Section, i: number) => ({ x: s.x ?? 40 + i * 270, y: s.y ?? 60 + (i % 2) * 170 });
-interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; schedule: Task[]; dayZones: DayZone[]; focusLog: FocusEntry[]; pomodoro: PomoSettings; updatedAt: number }
+interface State { maps: StudyMap[]; studyDays: string[]; learningPaths: LearningPath[]; schedule: Task[]; dayZones: DayZone[]; focusLog: FocusEntry[]; pomodoro: PomoSettings; wig?: Wig | undefined; updatedAt: number }
+export interface Wig { pathId: string; title: string; deadline: string; dailyPomos: number; weeklyWinDays: number }
 export const defaultPomo: PomoSettings = { focus: 25, break: 5, weeklyTarget: 20 };
 
 const KEY = "ljt-state-v1";
@@ -55,6 +56,7 @@ const normalize = (value: Partial<State>): State => ({
   dayZones: Array.isArray(value.dayZones) ? value.dayZones : [],
   focusLog: Array.isArray(value.focusLog) ? value.focusLog : [],
   pomodoro: { ...defaultPomo, ...(value.pomodoro ?? {}) },
+  wig: value.wig && typeof value.wig.pathId === "string" ? value.wig : undefined,
   updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
 });
 
@@ -171,6 +173,7 @@ export const actions = {
     return { ...s, schedule, focusLog: [...s.focusLog, entry] };
   }),
   setPomoSettings: (patch: Partial<PomoSettings>) => set((s) => ({ ...s, pomodoro: { ...s.pomodoro, ...patch } })),
+  setWig: (wig: Wig | undefined) => set((s) => ({ ...s, wig })),
   addZone: (z: Omit<DayZone, "id">) => set((s) => ({ ...s, dayZones: [...s.dayZones, { ...z, id: uid() }] })),
   updateZone: (id: string, patch: Partial<DayZone>) => set((s) => ({ ...s, dayZones: s.dayZones.map((z) => z.id === id ? { ...z, ...patch } : z) })),
   removeZone: (id: string) => set((s) => ({ ...s, dayZones: s.dayZones.filter((z) => z.id !== id) })),
