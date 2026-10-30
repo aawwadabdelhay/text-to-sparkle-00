@@ -87,6 +87,9 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
 
 
   const update = (id: string, patch: Partial<Block>) => onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const moveBlock = (i: number, d: number) => { const j = i + d; if (j < 0 || j >= blocks.length) return; const next = [...blocks]; [next[i], next[j]] = [next[j], next[i]]; onChange(next); };
   const insertAfter = (id: string | null, block: Block) => {
     const i = id ? blocks.findIndex((b) => b.id === id) : blocks.length - 1;
     const next = [...blocks]; next.splice(i + 1, 0, block); onChange(next); return block.id;
@@ -127,7 +130,15 @@ export function BlockEditor({ blocks: saved, onChange }: { blocks?: Block[] | un
   return <div className="rounded-xl border bg-card p-4 sm:p-6">
     <input ref={fileInput} type="file" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
     <div className="space-y-1">
-      {blocks.map((b) => <div key={b.id} className="group relative flex items-start gap-2">
+      {blocks.map((b, bi) => <div key={b.id} className={`group relative flex items-start gap-2 rounded ${overId === b.id && dragId !== b.id ? "ring-1 ring-primary" : ""}`}
+        onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(b.id); }}
+        onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== b.id) { const from = blocks.findIndex((x) => x.id === dragId); const next = [...blocks]; const [m] = next.splice(from, 1); next.splice(bi, 0, m); onChange(next); } setDragId(null); setOverId(null); }}>
+        <div className="mt-1 flex flex-col items-center opacity-40 group-hover:opacity-100">
+          <button type="button" draggable onDragStart={(e) => { setDragId(b.id); e.dataTransfer.effectAllowed = "move"; }} onDragEnd={() => { setDragId(null); setOverId(null); }}
+            aria-label="Drag to reorder" title="Drag to move" className="cursor-grab rounded p-1 text-muted-foreground hover:text-foreground active:cursor-grabbing"><GripVertical className="size-4" /></button>
+          <button type="button" disabled={bi === 0} onClick={() => moveBlock(bi, -1)} aria-label="Move up" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp className="size-3.5" /></button>
+          <button type="button" disabled={bi === blocks.length - 1} onClick={() => moveBlock(bi, 1)} aria-label="Move down" className="rounded text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown className="size-3.5" /></button>
+        </div>
         <div className="min-w-0 flex-1">
           {tools === b.id && TEXTY.includes(b.type) && b.type !== "embed" && <Toolbar b={b} set={(patch) => update(b.id, patch)} />}
           {TEXTY.includes(b.type) ? <TextRow onFocus={() => { if (tools !== b.id) setTools(null); }} onSel={(has) => setTools(has ? b.id : null)} b={b} inputRef={(el) => { refs.current[b.id] = el; }}
