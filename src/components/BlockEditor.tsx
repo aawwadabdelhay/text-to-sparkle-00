@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, CheckSquare, Download, ExternalLink, FileText, Heading1, Heading2, Image as ImageIcon, Link2, List, Minus, Paperclip, Pencil, Plus, Quote, Trash2, Type } from "lucide-react";
 import type { Block, BlockType } from "@/lib/store";
 import { removeFile, saveFile, useFileUrl } from "@/lib/files";
 
