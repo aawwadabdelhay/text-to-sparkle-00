@@ -211,7 +211,7 @@ export function Embed({ url }: { url: string }) {
 
 function MediaRow({ b }: { b: Block }) {
   const url = useFileUrl(b.fileId);
-  if (b.type === "divider") return <hr className="my-3 border-border" />;
+  if (b.type === "divider") return <hr className="border-border" />;
   const dl = url && <a href={url} download={b.fileName} className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:text-primary"><Download className="size-3" />Download</a>;
   if (b.type === "image") return <figure className="my-2 flex flex-col items-center">
     {url ? <img src={url} alt={b.fileName} className="mx-auto max-h-[480px] rounded-lg border object-contain" /> : <div className="h-32 animate-pulse rounded-lg bg-muted" />}
